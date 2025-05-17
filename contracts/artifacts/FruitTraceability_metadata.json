@@ -1,0 +1,177 @@
+{
+	"compiler": {
+		"version": "0.8.30+commit.73712a01"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_id",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_origin",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_owner",
+						"type": "string"
+					}
+				],
+				"name": "addBatch",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"name": "batches",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "batchId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "origin",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "currentOwner",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "status",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_id",
+						"type": "string"
+					}
+				],
+				"name": "getBatch",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "batchId",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "origin",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "currentOwner",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "status",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct FruitTraceability.Batch",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_id",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_newStatus",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_newOwner",
+						"type": "string"
+					}
+				],
+				"name": "updateStatus",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/fruit_traceabilty.sol": "FruitTraceability"
+		},
+		"evmVersion": "prague",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/fruit_traceabilty.sol": {
+			"keccak256": "0x8d8f4bbc6cb81a7091ba72dc98578163924ff397eafa1b325a9fa54b985ddedc",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://9899f7067dbf8730ae168fe4e25bffbaa118488a7923801f393fcf1a00cb8484",
+				"dweb:/ipfs/QmR6AH7QokqVXqfGw7QrESBP8cGYHHxCceCqP7Skgm5wAz"
+			]
+		}
+	},
+	"version": 1
+}
