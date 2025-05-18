@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fruit Traceability DApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 20px;
+      }
+
+      input,
+      button {
+        margin: 5px;
+        padding: 8px;
+        width: 300px;
+      }
+
+      .section {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+      }
+
+      button {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Fruit Traceability DApp</h2>
+
+    <button onclick="connectWallet()">Connect MetaMask</button>
+
+    <div class="section">
+      <h3>Add Batch</h3>
+      <input id="productName" placeholder="Product Name" />
+      <input id="originFarm" placeholder="Origin Farm" />
+      <input id="farmerName" placeholder="Farmer Name" />
+      <input id="harvestDate" type="date" />
+      <button onclick="addBatch()">Add Batch</button>
+    </div>
+
+    <div class="section">
+      <h3>Update Transport</h3>
+      <input id="batchIdTransport" placeholder="Batch ID" />
+      <input id="transporterName" placeholder="Transporter Name" />
+      <input id="transportDetails" placeholder="Transport Details" />
+      <input id="transportDate" type="date" />
+      <button onclick="updateTransportInfo()">Update Transport</button>
+    </div>
+
+    <div class="section">
+      <h3>Update Warehouse</h3>
+      <input id="batchIdWarehouse" placeholder="Batch ID" />
+      <input id="warehouseName" placeholder="Warehouse Name" />
+      <input id="warehouseDetails" placeholder="Warehouse Details" />
+      <input id="warehouseDate" type="date" />
+      <button onclick="updateWarehouseInfo()">Update Warehouse</button>
+    </div>
+
+    <div class="section">
+      <h3>Update Retail</h3>
+      <input id="batchIdRetail" placeholder="Batch ID" />
+      <input id="retailerName" placeholder="Retailer Name" />
+      <input id="retailStore" placeholder="Retail Store" />
+      <input id="retailDate" type="date" />
+      <button onclick="updateRetailerInfo()">Update Retail</button>
+    </div>
+
+    <div class="section">
+      <h3>Get Batch by Farmer Name</h3>
+      <input id="farmerNameInput" placeholder="Farmer Name" />
+      <button onclick="getBatch()">Get Batch</button>
+      <pre id="batchResult"></pre>
+    </div>
+
+    <script>
+      let web3;
+      let contract;
+      const contractAddress = "0x975f251b8f33ab4c536a8de9f0b04aa552074db4";
+      const abi = [
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "productName",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "originFarm",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "farmerName",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "harvestDate",
+              type: "uint256",
+            },
+          ],
+          name: "addBatch",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string",
+              name: "batchId",
+              type: "string",
+            },
+          ],
+          name: "BatchAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string",
+              name: "batchId",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "newOwner",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "status",
+              type: "string",
+            },
+          ],
+          name: "BatchUpdated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "batchId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "retailerName",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "retailStore",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "retailDate",
+              type: "uint256",
+            },
+          ],
+          name: "updateRetailerInfo",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "batchId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "transporterName",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "transportDetails",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "transportDate",
+              type: "uint256",
+            },
+          ],
+          name: "updateTransportInfo",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "batchId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "warehouseName",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "warehouseDetails",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "warehouseDate",
+              type: "uint256",
+            },
+          ],
+          name: "updateWarehouseInfo",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "batchCounter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          name: "batches",
+          outputs: [
+            {
+              internalType: "string",
+              name: "batchId",
+              type: "string",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "productName",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "originFarm",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "farmerName",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "harvestDate",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct FruitTraceability.FarmerInfo",
+              name: "farmer",
+              type: "tuple",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "transporterName",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "transportDetails",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "transportDate",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct FruitTraceability.TransportInfo",
+              name: "transport",
+              type: "tuple",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "warehouseName",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "warehouseDetails",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "warehouseDate",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct FruitTraceability.WarehouseInfo",
+              name: "warehouse",
+              type: "tuple",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "retailerName",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "retailStore",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "retailDate",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct FruitTraceability.RetailInfo",
+              name: "retailer",
+              type: "tuple",
+            },
+            {
+              internalType: "string",
+              name: "currentOwner",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "status",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "lastUpdated",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "farmerToBatchIds",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "farmerName",
+              type: "string",
+            },
+          ],
+          name: "getBatchesByFarmer",
+          outputs: [
+            {
+              internalType: "string[]",
+              name: "",
+              type: "string[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ];
+      async function connectWallet() {
+        if (window.ethereum) {
+          try {
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            web3 = new Web3(window.ethereum);
+            contract = new web3.eth.Contract(abi, contractAddress);
+            alert("Connected to MetaMask!");
+          } catch (err) {
+            alert("Connection failed: " + err.message);
+          }
+        } else {
+          alert("MetaMask not found!");
+        }
+      }
+
+      async function addBatch() {
+        const accounts = await web3.eth.getAccounts();
+        const productName = document.getElementById("productName").value;
+        const originFarm = document.getElementById("originFarm").value;
+        const farmerName = document.getElementById("farmerName").value;
+        const harvestDateInput = document.getElementById("harvestDate").value;
+
+        if (!productName || !originFarm || !farmerName || !harvestDateInput) {
+          alert("Please fill in all fields.");
+          return;
+        }
+
+        const harvestDate = Math.floor(
+          new Date(harvestDateInput).getTime() / 1000
+        );
+
+        await contract.methods
+          .addBatch(productName, originFarm, farmerName, harvestDate)
+          .send({ from: accounts[0] });
+
+        alert("Batch added successfully!");
+      }
+
+      async function updateTransportInfo() {
+        const accounts = await web3.eth.getAccounts();
+        const batchId = document.getElementById("batchIdTransport").value;
+        const transporterName =
+          document.getElementById("transporterName").value;
+        const transportDetails =
+          document.getElementById("transportDetails").value;
+        const transportDateInput =
+          document.getElementById("transportDate").value;
+
+        if (
+          !batchId ||
+          !transporterName ||
+          !transportDetails ||
+          !transportDateInput
+        ) {
+          alert("Please fill in all fields.");
+          return;
+        }
+
+        const transportDate = Math.floor(
+          new Date(transportDateInput).getTime() / 1000
+        );
+
+        await contract.methods
+          .updateTransportInfo(
+            batchId,
+            transporterName,
+            transportDetails,
+            transportDate
+          )
+          .send({ from: accounts[0] });
+
+        alert("Transport updated!");
+      }
+
+      async function updateWarehouseInfo() {
+        const accounts = await web3.eth.getAccounts();
+        const batchId = document.getElementById("batchIdWarehouse").value;
+        const warehouseName = document.getElementById("warehouseName").value;
+        const warehouseDetails =
+          document.getElementById("warehouseDetails").value;
+        const warehouseDateInput =
+          document.getElementById("warehouseDate").value;
+
+        if (
+          !batchId ||
+          !warehouseName ||
+          !warehouseDetails ||
+          !warehouseDateInput
+        ) {
+          alert("Please fill in all fields.");
+          return;
+        }
+
+        const warehouseDate = Math.floor(
+          new Date(warehouseDateInput).getTime() / 1000
+        );
+
+        await contract.methods
+          .updateWarehouseInfo(
+            batchId,
+            warehouseName,
+            warehouseDetails,
+            warehouseDate
+          )
+          .send({ from: accounts[0] });
+
+        alert("Warehouse updated!");
+      }
+
+      async function updateRetailerInfo() {
+        const accounts = await web3.eth.getAccounts();
+        const batchId = document.getElementById("batchIdRetail").value;
+        const retailerName = document.getElementById("retailerName").value;
+        const retailStore = document.getElementById("retailStore").value;
+        const retailDateInput = document.getElementById("retailDate").value;
+
+        if (!batchId || !retailerName || !retailStore || !retailDateInput) {
+          alert("Please fill in all fields.");
+          return;
+        }
+
+        const retailDate = Math.floor(
+          new Date(retailDateInput).getTime() / 1000
+        );
+
+        await contract.methods
+          .updateRetailerInfo(batchId, retailerName, retailStore, retailDate)
+          .send({ from: accounts[0] });
+
+        alert("Retail info updated!");
+      }
+
+      async function getBatch() {
+        const farmerName = document.getElementById("farmerNameInput").value;
+        if (!farmerName) {
+          alert("Enter a farmer name");
+          return;
+        }
+
+        try {
+          const batchIds = await contract.methods
+            .getBatchesByFarmer(farmerName)
+            .call();
+          const batchDetails = [];
+
+          for (const batchId of batchIds) {
+            const batch = await contract.methods.batches(batchId).call();
+            console.log("Raw batch data:", batch); // <-- Add this
+
+            const formattedBatch = {
+              batchId: batch.batchId?.toString(),
+              productName: batch.farmer?.productName || "",
+              originFarm: batch.farmer?.originFarm || "",
+              farmerName: batch.farmer?.farmerName || "",
+              harvestDate: batch.farmer?.harvestDate
+                ? batch.farmer.harvestDate.toString()
+                : "",
+
+              transporterName: batch.transport?.transporterName || "",
+              transportDetails: batch.transport?.transportDetails || "",
+              transportDate: batch.transport?.transportDate
+                ? batch.transport.transportDate.toString()
+                : "",
+
+              warehouseName: batch.warehouse?.warehouseName || "",
+              warehouseDetails: batch.warehouse?.warehouseDetails || "",
+              warehouseDate: batch.warehouse?.warehouseDate
+                ? batch.warehouse.warehouseDate.toString()
+                : "",
+
+              retailerName: batch.retailer?.retailerName || "",
+              retailStore: batch.retailer?.retailStore || "",
+              retailDate: batch.retailer?.retailDate
+                ? batch.retailer.retailDate.toString()
+                : "",
+
+              currentOwner: batch.currentOwner || "",
+              status: batch.status || "",
+            };
+            batchDetails.push(formattedBatch);
+          }
+
+          document.getElementById("batchResult").textContent = JSON.stringify(
+            batchDetails,
+            null,
+            2
+          );
+        } catch (err) {
+          document.getElementById("batchResult").textContent =
+            "Error fetching batch: " + err.message;
+        }
+      }
+    </script>
+  </body>
+</html>
