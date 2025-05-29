@@ -1,81 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fruit Traceability DApp</title>
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-    <style>
-      body {
-        font-family: Arial;
-        margin: 20px;
-      }
-
-      input,
-      button {
-        margin: 5px;
-        padding: 8px;
-        width: 300px;
-      }
-
-      .section {
-        margin-bottom: 20px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 10px;
-      }
-
-      button {
-        cursor: pointer;
-      }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
+  <body class="bg-gray-50 text-gray-800 font-sans">
+    <div class="max-w-3xl mx-auto p-6">
+      <h2 class="text-3xl font-bold mb-4 text-center">
+        🍎 Fruit Traceability DApp
+      </h2>
+      <div class="text-center mb-8">
+        <button
+          onclick="connectWallet()"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Connect MetaMask
+        </button>
+      </div>
 
-  <body>
-    <h2>Fruit Traceability DApp</h2>
+      <div class="space-y-6">
+        <div class="bg-white p-6 rounded shadow">
+          <h3 class="text-xl font-semibold mb-4">Add Batch</h3>
+          <div class="space-y-2">
+            <input
+              id="productName"
+              placeholder="Product Name"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="originFarm"
+              placeholder="Origin Farm"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="farmerName"
+              placeholder="Farmer Name"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="harvestDate"
+              type="date"
+              class="w-full p-2 border rounded"
+            />
+            <button
+              onclick="addBatch()"
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Add Batch
+            </button>
+          </div>
+        </div>
 
-    <button onclick="connectWallet()">Connect MetaMask</button>
+        <div class="bg-white p-6 rounded shadow">
+          <h3 class="text-xl font-semibold mb-4">Update Transport</h3>
+          <div class="space-y-2">
+            <input
+              id="batchIdTransport"
+              placeholder="Batch ID"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="transporterName"
+              placeholder="Transporter Name"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="transportDetails"
+              placeholder="Transport Details"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="transportDate"
+              type="date"
+              class="w-full p-2 border rounded"
+            />
+            <button
+              onclick="updateTransportInfo()"
+              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+            >
+              Update Transport
+            </button>
+          </div>
+        </div>
 
-    <div class="section">
-      <h3>Add Batch</h3>
-      <input id="productName" placeholder="Product Name" />
-      <input id="originFarm" placeholder="Origin Farm" />
-      <input id="farmerName" placeholder="Farmer Name" />
-      <input id="harvestDate" type="date" />
-      <button onclick="addBatch()">Add Batch</button>
+        <div class="bg-white p-6 rounded shadow">
+          <h3 class="text-xl font-semibold mb-4">Update Warehouse</h3>
+          <div class="space-y-2">
+            <input
+              id="batchIdWarehouse"
+              placeholder="Batch ID"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="warehouseName"
+              placeholder="Warehouse Name"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="warehouseDetails"
+              placeholder="Warehouse Details"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="warehouseDate"
+              type="date"
+              class="w-full p-2 border rounded"
+            />
+            <button
+              onclick="updateWarehouseInfo()"
+              class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+            >
+              Update Warehouse
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow">
+          <h3 class="text-xl font-semibold mb-4">Update Retail</h3>
+          <div class="space-y-2">
+            <input
+              id="batchIdRetail"
+              placeholder="Batch ID"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="retailerName"
+              placeholder="Retailer Name"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="retailStore"
+              placeholder="Retail Store"
+              class="w-full p-2 border rounded"
+            />
+            <input
+              id="retailDate"
+              type="date"
+              class="w-full p-2 border rounded"
+            />
+            <button
+              onclick="updateRetailerInfo()"
+              class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
+            >
+              Update Retail
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow">
+          <h3 class="text-xl font-semibold mb-4">Get Batch by Farmer Name</h3>
+          <div class="space-y-2">
+            <input
+              id="farmerNameInput"
+              placeholder="Farmer Name"
+              class="w-full p-2 border rounded"
+            />
+            <button
+              onclick="getBatch()"
+              class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Get Batch
+            </button>
+            <pre
+              id="batchResult"
+              class="bg-gray-100 p-3 rounded text-sm overflow-auto max-h-64"
+            ></pre>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div class="section">
-      <h3>Update Transport</h3>
-      <input id="batchIdTransport" placeholder="Batch ID" />
-      <input id="transporterName" placeholder="Transporter Name" />
-      <input id="transportDetails" placeholder="Transport Details" />
-      <input id="transportDate" type="date" />
-      <button onclick="updateTransportInfo()">Update Transport</button>
-    </div>
-
-    <div class="section">
-      <h3>Update Warehouse</h3>
-      <input id="batchIdWarehouse" placeholder="Batch ID" />
-      <input id="warehouseName" placeholder="Warehouse Name" />
-      <input id="warehouseDetails" placeholder="Warehouse Details" />
-      <input id="warehouseDate" type="date" />
-      <button onclick="updateWarehouseInfo()">Update Warehouse</button>
-    </div>
-
-    <div class="section">
-      <h3>Update Retail</h3>
-      <input id="batchIdRetail" placeholder="Batch ID" />
-      <input id="retailerName" placeholder="Retailer Name" />
-      <input id="retailStore" placeholder="Retail Store" />
-      <input id="retailDate" type="date" />
-      <button onclick="updateRetailerInfo()">Update Retail</button>
-    </div>
-
-    <div class="section">
-      <h3>Get Batch by Farmer Name</h3>
-      <input id="farmerNameInput" placeholder="Farmer Name" />
-      <button onclick="getBatch()">Get Batch</button>
-      <pre id="batchResult"></pre>
-    </div>
-
     <script>
       let web3;
       let contract;
@@ -562,7 +658,7 @@
 
           for (const batchId of batchIds) {
             const batch = await contract.methods.batches(batchId).call();
-            console.log("Raw batch data:", batch); // <-- Add this
+            // console.log("Raw batch data:", batch);
 
             const formattedBatch = {
               batchId: batch.batchId?.toString(),
@@ -570,30 +666,31 @@
               originFarm: batch.farmer?.originFarm || "",
               farmerName: batch.farmer?.farmerName || "",
               harvestDate: batch.farmer?.harvestDate
-                ? batch.farmer.harvestDate.toString()
+                ? formatDateFromTimestamp(batch.farmer.harvestDate)
                 : "",
 
               transporterName: batch.transport?.transporterName || "",
               transportDetails: batch.transport?.transportDetails || "",
               transportDate: batch.transport?.transportDate
-                ? batch.transport.transportDate.toString()
+                ? formatDateFromTimestamp(batch.transport.transportDate)
                 : "",
 
               warehouseName: batch.warehouse?.warehouseName || "",
               warehouseDetails: batch.warehouse?.warehouseDetails || "",
               warehouseDate: batch.warehouse?.warehouseDate
-                ? batch.warehouse.warehouseDate.toString()
+                ? formatDateFromTimestamp(batch.warehouse.warehouseDate)
                 : "",
 
               retailerName: batch.retailer?.retailerName || "",
               retailStore: batch.retailer?.retailStore || "",
               retailDate: batch.retailer?.retailDate
-                ? batch.retailer.retailDate.toString()
+                ? formatDateFromTimestamp(batch.retailer.retailDate)
                 : "",
 
               currentOwner: batch.currentOwner || "",
               status: batch.status || "",
             };
+
             batchDetails.push(formattedBatch);
           }
 
@@ -606,6 +703,16 @@
           document.getElementById("batchResult").textContent =
             "Error fetching batch: " + err.message;
         }
+      }
+
+      function formatDateFromTimestamp(timestamp) {
+        const ts =
+          typeof timestamp === "bigint" ? Number(timestamp) : timestamp;
+        const date = new Date(ts * 1000); // Convert to milliseconds
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
       }
     </script>
   </body>
