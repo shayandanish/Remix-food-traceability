@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>QR Code Generator & Batch Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="abi.js"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="max-w-2xl mx-auto p-6">
+      <h2 class="text-2xl font-bold mb-4 text-center">
+        🍏 QR Code Generator & Batch Info
+      </h2>
+
+      <!-- QR Code Generator -->
+      <div class="bg-white p-4 rounded shadow mb-6">
+        <input
+          id="farmerInput"
+          type="text"
+          placeholder="Enter Farmer Name"
+          class="w-full p-2 border rounded mb-4"
+        />
+        <button
+          onclick="generateQRCode()"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+        >
+          Generate QR Code
+        </button>
+        <div id="qrcode" class="mt-6 flex justify-center"></div>
+        <p
+          id="generatedLink"
+          class="text-center text-sm mt-4 text-blue-700"
+        ></p>
+      </div>
+
+      <!-- Batch Info Viewer -->
+      <div
+        id="result"
+        class="bg-white p-4 rounded shadow text-sm whitespace-pre-wrap"
+      ></div>
+    </div>
+
+    <script>
+      let web3, contract;
+
+      function generateQRCode() {
+        const farmer = document.getElementById("farmerInput").value.trim();
+        if (!farmer) {
+          alert("⚠️ Please enter a farmer name.");
+          return;
+        }
+
+        const url = `https://shayandanish.github.io/Remix-food-traceability/frontend/qrcode.html?farmer=${encodeURIComponent(
+          farmer
+        )}`;
+
+        document.getElementById("qrcode").innerHTML = "";
+
+        new QRCode(document.getElementById("qrcode"), {
+          text: url,
+          width: 200,
+          height: 200,
+        });
+
+        document.getElementById(
+          "generatedLink"
+        ).innerHTML = `🔗 <a href="${url}" target="_blank" class="underline">Click to open generated URL</a>`;
+      }
+
+      async function fetchBatchDetails(farmerName) {
+        const result = document.getElementById("result");
+
+        if (!farmerName) {
+          result.innerText = "❌ No farmer name found in URL.";
+          return;
+        }
+
+        if (typeof window.ethereum === "undefined") {
+          result.innerText = "❌ MetaMask not detected.";
+          return;
+        }
+
+        try {
+          web3 = new Web3(window.ethereum);
+          contract = new web3.eth.Contract(abi, contractAddress);
+
+          const batchIds = await contract.methods
+            .getBatchesByFarmer(farmerName)
+            .call();
+
+          if (batchIds.length === 0) {
+            result.innerText = "🚫 No batches found for this farmer.";
+            return;
+          }
+
+          const batchDetails = [];
+          for (const batchId of batchIds) {
+            const batch = await contract.methods.batches(batchId).call();
+            batchDetails.push({
+              batchId: batch.batchId,
+              productName: batch.farmer.productName,
+              originFarm: batch.farmer.originFarm,
+              harvestDate: formatDate(batch.farmer.harvestDate),
+              transporter: batch.transport.transporterName,
+              warehouse: batch.warehouse.warehouseName,
+              retailer: batch.retailer.retailerName,
+              currentOwner: batch.currentOwner,
+              status: batch.status,
+            });
+          }
+
+          result.innerText = JSON.stringify(batchDetails, null, 2);
+        } catch (err) {
+          result.innerText = "❌ Error fetching data: " + err.message;
+          console.error(err);
+        }
+      }
+
+      function formatDate(timestamp) {
+        return new Date(Number(timestamp) * 1000).toLocaleDateString();
+      }
+
+      // Check if QR link was used with ?farmer=
+      window.addEventListener("load", () => {
+        const params = new URLSearchParams(window.location.search);
+        const farmerName = params.get("farmer");
+        if (farmerName) {
+          fetchBatchDetails(farmerName);
+        }
+      });
+    </script>
+  </body>
+</html>
