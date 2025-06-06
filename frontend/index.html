@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="abi.js"></script>
-
   </head>
   <body class="bg-gray-50 text-gray-800 font-sans">
     <div class="max-w-3xl mx-auto p-6">
@@ -24,6 +23,7 @@
       </div>
 
       <div class="space-y-6">
+        <!-- Add Batch -->
         <div class="bg-white p-6 rounded shadow">
           <h3 class="text-xl font-semibold mb-4">Add Batch</h3>
           <div class="space-y-2">
@@ -47,6 +47,11 @@
               type="date"
               class="w-full p-2 border rounded"
             />
+            <input
+              id="quality"
+              placeholder="Initial Quality (e.g. Excellent)"
+              class="w-full p-2 border rounded"
+            />
             <button
               onclick="addBatch()"
               class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
@@ -56,6 +61,7 @@
           </div>
         </div>
 
+        <!-- Update Transport -->
         <div class="bg-white p-6 rounded shadow">
           <h3 class="text-xl font-semibold mb-4">Update Transport</h3>
           <div class="space-y-2">
@@ -79,6 +85,11 @@
               type="date"
               class="w-full p-2 border rounded"
             />
+            <input
+              id="qualityTransport"
+              placeholder="Quality During Transport"
+              class="w-full p-2 border rounded"
+            />
             <button
               onclick="updateTransportInfo()"
               class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
@@ -88,6 +99,7 @@
           </div>
         </div>
 
+        <!-- Update Warehouse -->
         <div class="bg-white p-6 rounded shadow">
           <h3 class="text-xl font-semibold mb-4">Update Warehouse</h3>
           <div class="space-y-2">
@@ -111,6 +123,11 @@
               type="date"
               class="w-full p-2 border rounded"
             />
+            <input
+              id="qualityWarehouse"
+              placeholder="Quality in Warehouse"
+              class="w-full p-2 border rounded"
+            />
             <button
               onclick="updateWarehouseInfo()"
               class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
@@ -120,6 +137,7 @@
           </div>
         </div>
 
+        <!-- Update Retail -->
         <div class="bg-white p-6 rounded shadow">
           <h3 class="text-xl font-semibold mb-4">Update Retail</h3>
           <div class="space-y-2">
@@ -143,6 +161,11 @@
               type="date"
               class="w-full p-2 border rounded"
             />
+            <input
+              id="qualityRetail"
+              placeholder="Final Retail Quality"
+              class="w-full p-2 border rounded"
+            />
             <button
               onclick="updateRetailerInfo()"
               class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
@@ -152,6 +175,7 @@
           </div>
         </div>
 
+        <!-- Get Batch Info -->
         <div class="bg-white p-6 rounded shadow">
           <h3 class="text-xl font-semibold mb-4">Get Batch by Farmer Name</h3>
           <div class="space-y-2">
@@ -175,18 +199,11 @@
       </div>
     </div>
 
-</div>
-
-
-   
-
-
     <script>
       let web3;
       let contract;
 
-      
-            async function connectWallet() {
+      async function connectWallet() {
         if (window.ethereum) {
           try {
             await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -207,8 +224,15 @@
         const originFarm = document.getElementById("originFarm").value;
         const farmerName = document.getElementById("farmerName").value;
         const harvestDateInput = document.getElementById("harvestDate").value;
+        const quality = document.getElementById("quality").value;
 
-        if (!productName || !originFarm || !farmerName || !harvestDateInput) {
+        if (
+          !productName ||
+          !originFarm ||
+          !farmerName ||
+          !harvestDateInput ||
+          !quality
+        ) {
           alert("Please fill in all fields.");
           return;
         }
@@ -218,7 +242,7 @@
         );
 
         await contract.methods
-          .addBatch(productName, originFarm, farmerName, harvestDate)
+          .addBatch(productName, originFarm, farmerName, harvestDate, quality)
           .send({ from: accounts[0] });
 
         alert("Batch added successfully!");
@@ -233,12 +257,14 @@
           document.getElementById("transportDetails").value;
         const transportDateInput =
           document.getElementById("transportDate").value;
+        const quality = document.getElementById("qualityTransport").value;
 
         if (
           !batchId ||
           !transporterName ||
           !transportDetails ||
-          !transportDateInput
+          !transportDateInput ||
+          !quality
         ) {
           alert("Please fill in all fields.");
           return;
@@ -253,7 +279,8 @@
             batchId,
             transporterName,
             transportDetails,
-            transportDate
+            transportDate,
+            quality
           )
           .send({ from: accounts[0] });
 
@@ -268,12 +295,14 @@
           document.getElementById("warehouseDetails").value;
         const warehouseDateInput =
           document.getElementById("warehouseDate").value;
+        const quality = document.getElementById("qualityWarehouse").value;
 
         if (
           !batchId ||
           !warehouseName ||
           !warehouseDetails ||
-          !warehouseDateInput
+          !warehouseDateInput ||
+          !quality
         ) {
           alert("Please fill in all fields.");
           return;
@@ -288,7 +317,8 @@
             batchId,
             warehouseName,
             warehouseDetails,
-            warehouseDate
+            warehouseDate,
+            quality
           )
           .send({ from: accounts[0] });
 
@@ -301,8 +331,15 @@
         const retailerName = document.getElementById("retailerName").value;
         const retailStore = document.getElementById("retailStore").value;
         const retailDateInput = document.getElementById("retailDate").value;
+        const quality = document.getElementById("qualityRetail").value;
 
-        if (!batchId || !retailerName || !retailStore || !retailDateInput) {
+        if (
+          !batchId ||
+          !retailerName ||
+          !retailStore ||
+          !retailDateInput ||
+          !quality
+        ) {
           alert("Please fill in all fields.");
           return;
         }
@@ -312,7 +349,13 @@
         );
 
         await contract.methods
-          .updateRetailerInfo(batchId, retailerName, retailStore, retailDate)
+          .updateRetailerInfo(
+            batchId,
+            retailerName,
+            retailStore,
+            retailDate,
+            quality
+          )
           .send({ from: accounts[0] });
 
         alert("Retail info updated!");
@@ -333,8 +376,6 @@
 
           for (const batchId of batchIds) {
             const batch = await contract.methods.batches(batchId).call();
-            // console.log("Raw batch data:", batch);
-
             const formattedBatch = {
               batchId: batch.batchId?.toString(),
               productName: batch.farmer?.productName || "",
@@ -343,29 +384,25 @@
               harvestDate: batch.farmer?.harvestDate
                 ? formatDateFromTimestamp(batch.farmer.harvestDate)
                 : "",
-
               transporterName: batch.transport?.transporterName || "",
               transportDetails: batch.transport?.transportDetails || "",
               transportDate: batch.transport?.transportDate
                 ? formatDateFromTimestamp(batch.transport.transportDate)
                 : "",
-
               warehouseName: batch.warehouse?.warehouseName || "",
               warehouseDetails: batch.warehouse?.warehouseDetails || "",
               warehouseDate: batch.warehouse?.warehouseDate
                 ? formatDateFromTimestamp(batch.warehouse.warehouseDate)
                 : "",
-
               retailerName: batch.retailer?.retailerName || "",
               retailStore: batch.retailer?.retailStore || "",
               retailDate: batch.retailer?.retailDate
                 ? formatDateFromTimestamp(batch.retailer.retailDate)
                 : "",
-
+              quality: batch.quality || "",
               currentOwner: batch.currentOwner || "",
               status: batch.status || "",
             };
-
             batchDetails.push(formattedBatch);
           }
 
@@ -383,7 +420,7 @@
       function formatDateFromTimestamp(timestamp) {
         const ts =
           typeof timestamp === "bigint" ? Number(timestamp) : timestamp;
-        const date = new Date(ts * 1000); // Convert to milliseconds
+        const date = new Date(ts * 1000);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");

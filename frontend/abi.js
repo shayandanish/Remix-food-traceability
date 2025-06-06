@@ -1,4 +1,4 @@
-const contractAddress = "0x975f251b8f33ab4c536a8de9f0b04aa552074db4";
+const contractAddress = "0x24842fcf5e03ba5b9ec1bd48a9188f0a87c9b2f8";
 const abi = [
   {
     inputs: [
@@ -21,6 +21,11 @@ const abi = [
         internalType: "uint256",
         name: "harvestDate",
         type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "quality",
+        type: "string",
       },
     ],
     name: "addBatch",
@@ -62,6 +67,12 @@ const abi = [
         name: "status",
         type: "string",
       },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "quality",
+        type: "string",
+      },
     ],
     name: "BatchUpdated",
     type: "event",
@@ -87,6 +98,11 @@ const abi = [
         internalType: "uint256",
         name: "retailDate",
         type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "quality",
+        type: "string",
       },
     ],
     name: "updateRetailerInfo",
@@ -116,6 +132,11 @@ const abi = [
         name: "transportDate",
         type: "uint256",
       },
+      {
+        internalType: "string",
+        name: "quality",
+        type: "string",
+      },
     ],
     name: "updateTransportInfo",
     outputs: [],
@@ -143,6 +164,11 @@ const abi = [
         internalType: "uint256",
         name: "warehouseDate",
         type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "quality",
+        type: "string",
       },
     ],
     name: "updateWarehouseInfo",
@@ -270,6 +296,11 @@ const abi = [
         internalType: "struct FruitTraceability.RetailInfo",
         name: "retailer",
         type: "tuple",
+      },
+      {
+        internalType: "string",
+        name: "quality",
+        type: "string",
       },
       {
         internalType: "string",
