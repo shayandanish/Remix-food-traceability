@@ -15,11 +15,13 @@
       </h2>
       <div class="text-center mb-8">
         <button
+          id="connectButton"
           onclick="connectWallet()"
           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Connect MetaMask
         </button>
+        <p id="walletAddress" class="mt-2 text-sm text-gray-700"></p>
       </div>
 
       <div class="space-y-6">
@@ -204,12 +206,20 @@
       let contract;
 
       async function connectWallet() {
+        const connectButton = document.getElementById("connectButton");
+        const walletAddressEl = document.getElementById("walletAddress");
+
         if (window.ethereum) {
           try {
-            await window.ethereum.request({ method: "eth_requestAccounts" });
+            const accounts = await window.ethereum.request({
+              method: "eth_requestAccounts",
+            });
             web3 = new Web3(window.ethereum);
             contract = new web3.eth.Contract(abi, contractAddress);
-            alert("Connected to MetaMask!");
+            const account = accounts[0];
+            connectButton.textContent = "Connected";
+            connectButton.disabled = true;
+            walletAddressEl.textContent = `Wallet: ${account}`;
           } catch (err) {
             alert("Connection failed: " + err.message);
           }
@@ -217,6 +227,23 @@
           alert("MetaMask not found!");
         }
       }
+
+      window.addEventListener("load", async () => {
+        if (window.ethereum && window.ethereum.selectedAddress) {
+          const accounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
+          if (accounts.length > 0) {
+            const connectButton = document.getElementById("connectButton");
+            const walletAddressEl = document.getElementById("walletAddress");
+            web3 = new Web3(window.ethereum);
+            contract = new web3.eth.Contract(abi, contractAddress);
+            connectButton.textContent = "Connected";
+            connectButton.disabled = true;
+            walletAddressEl.textContent = `Wallet: ${accounts[0]}`;
+          }
+        }
+      });
 
       async function addBatch() {
         const accounts = await web3.eth.getAccounts();
