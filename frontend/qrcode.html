@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <!-- abi.js must contain 'abi' and 'contractAddress' -->
   <script src="abi.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -18,18 +17,10 @@
     }
 
     .glass-panel {
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(100, 150, 80, 0.3);
       border-radius: 1.5rem;
-    }
-
-    .qr-container {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 2rem;
-      display: inline-block;
-      box-shadow: 0 15px 30px -10px rgba(60, 100, 30, 0.2);
     }
 
     .btn-fruit {
@@ -41,75 +32,216 @@
       transform: translateY(-2px);
       box-shadow: 0 12px 20px -10px #1e5f2e;
     }
+
+    .table-container {
+      overflow-x: auto;
+      max-width: 100%;
+      border-radius: 1rem;
+    }
+
+    .batch-table {
+      min-width: 1000px;
+      border-collapse: separate;
+      border-spacing: 0 6px;
+    }
+
+    .batch-table th {
+      @apply bg-green-50 text-green-800 text-xs font-semibold px-3 py-2.5 whitespace-nowrap;
+    }
+
+    .batch-table td {
+      @apply bg-white/90 px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap;
+    }
+
+    .batch-table tr:hover td {
+      @apply bg-green-50/60;
+    }
+
+    .batch-table th:first-child {
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+
+    .batch-table th:last-child {
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    /* Hide elements when in QR scan mode */
+    .qr-only {
+      display: block;
+    }
+
+    .scan-mode .qr-only {
+      display: none;
+    }
   </style>
 </head>
 
-<body class="antialiased p-4 min-h-screen flex items-center justify-center">
+<body class="antialiased p-4 min-h-screen flex items-start justify-center" id="mainBody">
 
-  <div class="max-w-3xl w-full my-8">
-    <!-- header with back link -->
+  <div class="max-w-5xl w-full my-6">
+    <!-- header with back link - visible in both modes -->
     <div class="flex items-center justify-between mb-4">
       <a href="https://shayandanish.github.io/Remix-food-traceability/frontend/index.html"
-        class="text-green-700 hover:text-green-800 flex items-center gap-1 text-sm bg-white/50 px-3 py-1 rounded-full">
+        class="text-green-700 hover:text-green-800 flex items-center gap-1 text-sm bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-green-200 transition">
         <i class="fas fa-arrow-left"></i> back to landing
       </a>
-      <div class="text-green-800 font-semibold flex items-center gap-2">
+      <div class="text-green-800 font-semibold flex items-center gap-2 bg-white/40 px-4 py-2 rounded-full">
         <i class="fas fa-seedling"></i>
         <span>QR batch viewer</span>
       </div>
     </div>
 
     <!-- main qr card -->
-    <div class="glass-panel p-6 md:p-8 shadow-xl">
-      <div class="flex items-center gap-3 border-b border-green-100 pb-4 mb-6">
-        <i class="fas fa-qrcode text-3xl text-indigo-600"></i>
-        <h2 class="text-2xl font-bold text-green-800">farmer QR scanner</h2>
+    <div class="glass-panel p-5 md:p-6 shadow-xl">
+
+      <!-- ===== QR GENERATOR SECTION - HIDDEN WHEN SCANNED ===== -->
+      <div id="qrGeneratorSection" class="qr-only">
+        <div class="flex items-center gap-3 border-b border-green-200 pb-3 mb-4">
+          <i class="fas fa-qrcode text-2xl text-indigo-600"></i>
+          <h2 class="text-xl md:text-2xl font-bold text-green-800">farmer QR scanner</h2>
+        </div>
+
+        <!-- input row -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input id="farmerInput" type="text" placeholder="e.g. John Farmer"
+            class="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-300 outline-none bg-white/80">
+          <button onclick="generateQRCode()"
+            class="btn-fruit text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md whitespace-nowrap">
+            <i class="fas fa-qrcode"></i> generate QR
+          </button>
+        </div>
+
+        <!-- QR display area + link row -->
+        <div class="flex flex-col md:flex-row items-center gap-6 mt-6">
+          <div id="qrcode"
+            class="flex justify-center items-center bg-white p-3 rounded-2xl shadow-md min-w-[160px] min-h-[160px]">
+            <div class="text-gray-400 text-xs text-center">✨ QR code<br>will appear here</div>
+          </div>
+          <div class="flex-1 text-sm break-all bg-white/50 p-3 rounded-xl border border-green-100">
+            <i class="fas fa-link text-green-600 mr-1"></i>
+            <span id="generatedLink" class="text-indigo-700"></span>
+          </div>
+        </div>
       </div>
 
-      <!-- input row -->
-      <div class="flex flex-col sm:flex-row gap-3">
-        <input id="farmerInput" type="text" placeholder="e.g. John Farmer"
-          class="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-300 outline-none">
-        <button onclick="generateQRCode()"
-          class="btn-fruit text-white px-7 py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md">
-          <i class="fas fa-qrcode"></i> generate
-        </button>
-      </div>
-
-      <!-- QR display area -->
-      <div id="qrcode" class="mt-8 flex flex-col items-center justify-center min-h-[240px]">
-        <!-- qr will appear here -->
-        <div class="text-gray-400 text-sm">✨ your QR code will appear here</div>
-      </div>
-
-      <!-- generated link -->
-      <div id="generatedLink" class="text-center text-sm mt-4 text-blue-700 break-words px-2"></div>
-
-      <!-- batch info table (formatted) -->
-      <div class="mt-10">
-        <div class="flex items-center gap-2 mb-4">
+      <!-- ===== BATCH DETAILS SECTION - ALWAYS VISIBLE ===== -->
+      <div class="mt-4" id="batchSection">
+        <div class="flex items-center gap-2 mb-3">
           <i class="fas fa-clipboard-list text-green-600 text-xl"></i>
-          <h3 class="font-semibold text-gray-700 text-lg">batch details</h3>
+          <h3 class="font-semibold text-gray-800 text-lg">batch details</h3>
+          <span id="batchCount" class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full ml-2"></span>
         </div>
-        <div id="result"
-          class="bg-white/90 border border-green-100 rounded-2xl p-4 text-sm overflow-auto max-h-96 shadow-inner">
-          <span class="text-gray-400">⏎ batches will appear here as a table</span>
+
+        <div class="table-container border border-green-100 rounded-2xl bg-white/70 shadow-inner">
+          <div class="p-1">
+            <div id="result" class="overflow-x-auto">
+              <!-- Default message changes based on mode -->
+              <div id="defaultMessage" class="text-gray-400 text-center py-8">
+                <i class="fas fa-qrcode text-4xl mb-3 text-green-300"></i>
+                <p>Enter a farmer name above to generate QR code</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- hint -->
-      <p class="text-xs text-gray-400 mt-5 flex items-center gap-1">
+      <!-- hint - changes based on mode -->
+      <p class="text-xs text-gray-400 mt-4 flex items-center gap-1">
         <i class="fas fa-info-circle"></i>
-        This page works standalone. Use ?farmer=NAME in URL to auto-load.
+        <span id="scanHint">Generate a QR code or scan one to view batch details</span>
       </p>
     </div>
   </div>
 
   <script>
-    // --- web3 / contract globals (from abi.js) ---
+    // --- web3 / contract globals ---
     let web3, contract;
+    let isScanMode = false; // Track if we're in QR scan mode
 
-    // --- generate QR code (updated) ---
+    // --- auto-connect to MetaMask on page load ---
+    async function initWeb3() {
+      if (typeof window.ethereum !== "undefined") {
+        try {
+          web3 = new Web3(window.ethereum);
+
+          // Check if already authorized without prompting
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+
+          if (accounts.length > 0) {
+            console.log("MetaMask already connected:", accounts[0]);
+          }
+
+          // Initialize contract if ABI and address exist
+          if (typeof contractAddress !== 'undefined' && typeof abi !== 'undefined') {
+            contract = new web3.eth.Contract(abi, contractAddress);
+            console.log("Contract initialized");
+          } else {
+            console.error("ABI or contractAddress not defined in abi.js");
+          }
+
+        } catch (err) {
+          console.error("Web3 initialization error:", err);
+        }
+      } else {
+        console.log("MetaMask not detected");
+      }
+    }
+
+    // --- format date nicely (DD/MM/YYYY) ---
+    function formatDisplayDate(timestamp) {
+      if (!timestamp || timestamp === '0' || timestamp === 0) return '—';
+      const ts = typeof timestamp === 'bigint' ? Number(timestamp) : Number(timestamp);
+      if (isNaN(ts) || ts === 0) return '—';
+      const d = new Date(ts * 1000);
+      if (isNaN(d.getTime())) return '—';
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    // --- safe string getter ---
+    function safeStr(val) {
+      if (!val) return '—';
+      if (typeof val === 'object') {
+        return '—';
+      }
+      return String(val).trim() || '—';
+    }
+
+    // --- ensure MetaMask is connected before fetching ---
+    async function ensureMetaMaskConnected() {
+      if (!window.ethereum) {
+        return false;
+      }
+
+      if (!web3) {
+        web3 = new Web3(window.ethereum);
+      }
+
+      try {
+        // Try to get accounts without prompting if possible
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+
+        if (accounts.length === 0) {
+          // Try to request connection (this will show popup)
+          const newAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          if (newAccounts.length === 0) return false;
+        }
+
+        // Re-initialize contract if needed
+        if (!contract && typeof contractAddress !== 'undefined' && typeof abi !== 'undefined') {
+          contract = new web3.eth.Contract(abi, contractAddress);
+        }
+
+        return true;
+      } catch (err) {
+        console.error("MetaMask connection error:", err);
+        return false;
+      }
+    }
+
+    // --- generate QR code (normal mode) ---
     function generateQRCode() {
       const farmer = document.getElementById("farmerInput").value.trim();
       if (!farmer) {
@@ -117,132 +249,217 @@
         return;
       }
 
-      // build URL that points to this same page with ?farmer=
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
+      const baseUrl = 'https://shayandanish.github.io/Remix-food-traceability/frontend/qrcode.html';
       const url = `${baseUrl}?farmer=${encodeURIComponent(farmer)}`;
 
-      // clear previous qr
+      // clear and generate qr
       const qrDiv = document.getElementById("qrcode");
       qrDiv.innerHTML = '';
 
       new QRCode(qrDiv, {
         text: url,
-        width: 220,
-        height: 220,
+        width: 150,
+        height: 150,
         colorDark: "#1e4a2b",
         colorLight: "#ffffff",
       });
 
-      // show clickable link
-      document.getElementById("generatedLink").innerHTML = `
-        <i class="fas fa-link text-green-600 mr-1"></i> 
-        <a href="${url}" target="_blank" class="underline text-indigo-700 break-all">${url}</a>
-      `;
+      document.getElementById("generatedLink").innerHTML = `<a href="${url}" target="_blank" class="underline break-all">${url}</a>`;
 
-      // fetch and display batch for this farmer
+      document.getElementById("scanHint").innerHTML = '<i class="fas fa-camera mr-1"></i> Scan this QR code with your phone to view batch details';
+
+      // Also fetch and display batch details immediately
       fetchBatchDetails(farmer);
     }
 
-    // --- fetch batch and render as HTML table ---
+    // --- fetch batch and render table ---
     async function fetchBatchDetails(farmerName) {
       const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> loading batches...</div>';
+      const batchCountSpan = document.getElementById("batchCount");
+      const defaultMsg = document.getElementById("defaultMessage");
+
+      if (defaultMsg) defaultMsg.style.display = 'none';
+
+      resultDiv.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin mr-2"></i> loading batch data...</div>';
+      batchCountSpan.textContent = '';
 
       if (!farmerName) {
-        resultDiv.innerHTML = '❌ No farmer name.';
+        resultDiv.innerHTML = '<div class="text-center text-red-500 py-8">❌ No farmer name provided.</div>';
         return;
       }
 
-      if (typeof window.ethereum === "undefined") {
-        resultDiv.innerHTML = '❌ MetaMask not detected. Please install.';
+      // First ensure MetaMask is connected
+      const connected = await ensureMetaMaskConnected();
+      if (!connected) {
+        resultDiv.innerHTML = '<div class="text-center text-red-500 py-8">❌ Please connect MetaMask to view batch data.</div>';
         return;
       }
 
       try {
-        // initialize web3 & contract if needed
-        if (!web3) {
-          web3 = new Web3(window.ethereum);
-          // check that contractAddress and abi exist (from abi.js)
+        if (!contract) {
           if (typeof contractAddress === 'undefined' || typeof abi === 'undefined') {
-            resultDiv.innerHTML = '❌ Contract ABI or address not found. Make sure abi.js is loaded.';
+            resultDiv.innerHTML = '<div class="text-center text-red-500 py-8">❌ Contract configuration missing.</div>';
             return;
           }
           contract = new web3.eth.Contract(abi, contractAddress);
         }
 
+        // Call the contract
         const batchIds = await contract.methods.getBatchesByFarmer(farmerName).call();
 
-        if (batchIds.length === 0) {
-          resultDiv.innerHTML = '🚫 No batches found for this farmer.';
+        if (!batchIds || batchIds.length === 0) {
+          resultDiv.innerHTML = '<div class="text-center text-gray-500 py-8">🚫 No batches found for this farmer.</div>';
+          batchCountSpan.textContent = '0';
           return;
         }
 
-        // build beautiful table
-        let html = `<table class="w-full text-left border-separate border-spacing-0 border-spacing-y-2">
-          <thead class="bg-green-50 text-green-800 text-xs uppercase rounded-t-lg">
+        batchCountSpan.textContent = `${batchIds.length} batch${batchIds.length > 1 ? 'es' : ''}`;
+
+        // Build table
+        let html = `<table class="batch-table w-full text-left">
+          <thead>
             <tr>
-              <th class="px-3 py-2 rounded-l-lg">Batch ID</th>
-              <th class="px-3 py-2">Product</th>
-              <th class="px-3 py-2">Harvest</th>
-              <th class="px-3 py-2">Transport</th>
-              <th class="px-3 py-2">Warehouse</th>
-              <th class="px-3 py-2 rounded-r-lg">Quality</th>
+              <th class="rounded-l-lg">PRODUCT</th>
+              <th>HARVEST</th>
+              <th>TRANSPORT</th>
+              <th>WAREHOUSE</th>
+              <th>FARMER</th>
+              <th>RETAILER</th>
+              <th>STORE</th>
+              <th class="rounded-r-lg">QUALITY</th>
             </tr>
           </thead>
           <tbody>`;
 
         for (const batchId of batchIds) {
           const batch = await contract.methods.batches(batchId).call();
-          const farmerPart = batch.farmer || {};
-          const transportPart = batch.transport || {};
-          const warehousePart = batch.warehouse || {};
 
-          html += `<tr class="bg-white/80 hover:bg-green-50/70 transition rounded-lg">
-            <td class="px-3 py-2 font-mono text-xs">${batchId.toString().substring(0, 8)}…</td>
-            <td class="px-3 py-2">${farmerPart.productName || '—'}</td>
-            <td class="px-3 py-2">${farmerPart.harvestDate ? formatDate(farmerPart.harvestDate) : '—'}</td>
-            <td class="px-3 py-2">${transportPart.transporterName || '—'}</td>
-            <td class="px-3 py-2">${warehousePart.warehouseName || '—'}</td>
-            <td class="px-3 py-2 font-medium">${batch.quality || '—'}</td>
+          // Extract nested objects properly
+          const farmerData = batch.farmer || {};
+          const transportData = batch.transport || {};
+          const warehouseData = batch.warehouse || {};
+          const retailerData = batch.retailer || {};
+
+          // Farmer name
+          let farmerNameDisplay = '—';
+          if (batch.farmerName && typeof batch.farmerName !== 'object') farmerNameDisplay = safeStr(batch.farmerName);
+          else if (farmerData.farmerName) farmerNameDisplay = safeStr(farmerData.farmerName);
+
+          // Retailer name
+          let retailerNameDisplay = '—';
+          if (batch.retailerName && typeof batch.retailerName !== 'object') retailerNameDisplay = safeStr(batch.retailerName);
+          else if (retailerData.retailerName) retailerNameDisplay = safeStr(retailerData.retailerName);
+
+          // Store name
+          let storeDisplay = '—';
+          if (batch.retailStore && typeof batch.retailStore !== 'object') storeDisplay = safeStr(batch.retailStore);
+          else if (retailerData.retailStore) storeDisplay = safeStr(retailerData.retailStore);
+
+          // Product name
+          let productDisplay = '—';
+          if (farmerData.productName) productDisplay = safeStr(farmerData.productName);
+          else if (batch.productName) productDisplay = safeStr(batch.productName);
+
+          // Harvest date
+          let harvestDisplay = '—';
+          if (farmerData.harvestDate) harvestDisplay = formatDisplayDate(farmerData.harvestDate);
+          else if (batch.harvestDate) harvestDisplay = formatDisplayDate(batch.harvestDate);
+
+          // Transport
+          let transportDisplay = '—';
+          if (transportData.transporterName) transportDisplay = safeStr(transportData.transporterName);
+          else if (batch.transporterName) transportDisplay = safeStr(batch.transporterName);
+
+          // Warehouse
+          let warehouseDisplay = '—';
+          if (warehouseData.warehouseName) warehouseDisplay = safeStr(warehouseData.warehouseName);
+          else if (batch.warehouseName) warehouseDisplay = safeStr(batch.warehouseName);
+
+          // Quality
+          let qualityDisplay = safeStr(batch.quality) || '—';
+
+          html += `<tr>
+            <td class="font-medium">${productDisplay}</td>
+            <td>${harvestDisplay}</td>
+            <td>${transportDisplay}</td>
+            <td>${warehouseDisplay}</td>
+            <td>${farmerNameDisplay}</td>
+            <td>${retailerNameDisplay}</td>
+            <td>${storeDisplay}</td>
+            <td>${qualityDisplay}</td>
           </tr>`;
         }
 
         html += `</tbody></table>`;
         resultDiv.innerHTML = html;
 
+        // Update hint based on mode
+        if (isScanMode) {
+          document.getElementById("scanHint").innerHTML = `<i class="fas fa-check-circle text-green-600 mr-1"></i> Showing ${batchIds.length} batches for farmer: ${farmerName}`;
+        } else {
+          document.getElementById("scanHint").innerHTML = `<i class="fas fa-check-circle text-green-600 mr-1"></i> Loaded ${batchIds.length} batches for ${farmerName}`;
+        }
+
       } catch (err) {
-        resultDiv.innerHTML = `❌ Error: ${err.message}`;
-        console.error(err);
+        console.error("Fetch error:", err);
+        resultDiv.innerHTML = `<div class="text-center text-red-500 py-6">❌ Error: ${err.message}</div>`;
       }
     }
 
-    function formatDate(timestamp) {
-      if (!timestamp) return '—';
-      const ts = typeof timestamp === 'bigint' ? Number(timestamp) : Number(timestamp);
-      const d = new Date(ts * 1000);
-      if (isNaN(d)) return '—';
-      return d.toLocaleDateString();
-    }
+    // --- MAIN: Check if this is a QR code scan ---
+    window.addEventListener("load", async () => {
+      // Initialize web3 first
+      await initWeb3();
 
-    // auto-load if URL has ?farmer=
-    window.addEventListener("load", () => {
       const params = new URLSearchParams(window.location.search);
       const farmerName = params.get("farmer");
+
       if (farmerName) {
-        document.getElementById("farmerInput").value = farmerName;
-        // also generate QR and fetch data
+        // QR CODE SCAN DETECTED - Hide generator, show only batch details
+        console.log("QR CODE SCANNED MODE - hiding generator");
+        isScanMode = true;
+
+        // HIDE the QR generator section
+        const generatorSection = document.getElementById("qrGeneratorSection");
+        if (generatorSection) {
+          generatorSection.style.display = 'none';
+        }
+
+        // Update header to be more minimal for scan mode
+        document.querySelector(".text-green-800.font-semibold").innerHTML = '<i class="fas fa-seedling"></i> batch view';
+
+        // Update the default message
+        const defaultMsg = document.getElementById("defaultMessage");
+        if (defaultMsg) {
+          defaultMsg.innerHTML = '<i class="fas fa-spinner fa-spin text-4xl mb-3 text-green-300"></i><p>Loading batch details for farmer: ' + farmerName + '</p>';
+        }
+
+        document.getElementById("scanHint").innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> QR detected! Loading data...';
+
+        // Fetch and display batch details
         setTimeout(() => {
-          generateQRCode();  // this calls fetchBatchDetails internally
-        }, 300);
+          fetchBatchDetails(farmerName);
+        }, 500);
+      } else {
+        // Normal mode - show everything
+        console.log("NORMAL MODE - showing generator");
+        document.getElementById("scanHint").innerHTML = '👆 Enter a farmer name above to generate a QR code';
       }
     });
 
-    // optional: try to initialize web3 ahead (but not required)
+    // Listen for account changes
     if (window.ethereum) {
-      web3 = new Web3(window.ethereum);
-      if (typeof contractAddress !== 'undefined' && typeof abi !== 'undefined') {
-        contract = new web3.eth.Contract(abi, contractAddress);
-      }
+      window.ethereum.on('accountsChanged', function (accounts) {
+        console.log('Account changed:', accounts);
+        if (accounts.length > 0) {
+          // Check if there's a farmer in URL and reload data
+          const params = new URLSearchParams(window.location.search);
+          const farmerName = params.get("farmer");
+          if (farmerName) {
+            fetchBatchDetails(farmerName);
+          }
+        }
+      });
     }
   </script>
 </body>
