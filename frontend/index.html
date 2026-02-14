@@ -241,10 +241,30 @@
       </div>
     </div>
 
+    <!-- Transaction Modal -->
+    <div id="transactionModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+        <div class="p-6">
+          <div class="flex items-center justify-center mb-4">
+            <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center">
+              <!-- Icon will be inserted here -->
+            </div>
+          </div>
+          <h3 id="modalTitle" class="text-xl font-bold text-center text-gray-800 mb-2"></h3>
+          <p id="modalMessage" class="text-center text-gray-600 mb-6"></p>
+          <button onclick="closeModal()"
+            class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-3 rounded-xl font-medium transition-all">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- tiny footer -->
     <div class="text-center text-xs text-green-700/50 mt-8 flex items-center justify-center gap-2">
       <i class="fas fa-leaf"></i>
-      <span>farm‑to‑fork transparency • powered by blockchain</span>
+      <span>farm‑to‑customer transparency • powered by blockchain</span>
       <i class="fas fa-leaf"></i>
     </div>
   </div>
@@ -276,10 +296,10 @@
           // --- important: force popup for transactions by using send() with from field ---
           // (no extra code needed, but we need to ensure contract methods use {from: account})
         } catch (err) {
-          alert("Connection failed: " + err.message);
+          showModal('error', 'Connection Failed', err.message);
         }
       } else {
-        alert("🦊 MetaMask not found! Please install it.");
+        showModal('error', 'MetaMask Not Found', 'Please install MetaMask to use this application.');
       }
     }
 
@@ -302,6 +322,37 @@
         } catch (e) { }
       }
     });
+
+    // ----- Modal Helper Functions -----
+    function showModal(type, title, message) {
+      const modal = document.getElementById('transactionModal');
+      const modalIcon = document.getElementById('modalIcon');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMessage = document.getElementById('modalMessage');
+
+      // Set content
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+
+      // Set icon based on type
+      if (type === 'success') {
+        modalIcon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-green-100';
+        modalIcon.innerHTML = '<i class="fas fa-check-circle text-green-600 text-4xl"></i>';
+      } else if (type === 'error') {
+        modalIcon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-red-100';
+        modalIcon.innerHTML = '<i class="fas fa-times-circle text-red-600 text-4xl"></i>';
+      } else if (type === 'warning') {
+        modalIcon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-yellow-100';
+        modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-yellow-600 text-4xl"></i>';
+      }
+
+      // Show modal
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('transactionModal').classList.add('hidden');
+    }
 
     // ----- helper: date to unix timestamp (seconds) -----
     function dateToTimestamp(dateString) {
@@ -338,10 +389,13 @@
             <th class="px-3 py-2">Product</th>
             <th class="px-3 py-2">Farm</th>
             <th class="px-3 py-2">Harvest</th>
+            <th class="px-3 py-2">Farmer Name</th>
             <th class="px-3 py-2">Transport</th>
             <th class="px-3 py-2">Warehouse</th>
             <th class="px-3 py-2">Retail</th>
-            <th class="px-3 py-2 rounded-r-lg">Quality</th>
+            <th class="px-3 py-2">Quality</th>
+            <th class="px-3 py-2">Status</th>
+            <th class="px-3 py-2 rounded-r-lg">Owner</th>
           </tr>
         </thead>
         <tbody class="text-sm">`;
@@ -352,10 +406,13 @@
           <td class="px-3 py-2">${b.productName || '—'}</td>
           <td class="px-3 py-2">${b.originFarm || '—'}</td>
           <td class="px-3 py-2">${b.harvestDate || '—'}</td>
+          <td class="px-3 py-2">${b.farmerName || '—'}</td>
           <td class="px-3 py-2">${b.transporterName ? b.transporterName + '<br><span class="text-xs text-gray-500">' + (b.transportDate || '') + '</span>' : '—'}</td>
           <td class="px-3 py-2">${b.warehouseName ? b.warehouseName + '<br><span class="text-xs text-gray-500">' + (b.warehouseDate || '') + '</span>' : '—'}</td>
           <td class="px-3 py-2">${b.retailerName ? b.retailerName + '<br><span class="text-xs text-gray-500">' + (b.retailDate || '') + '</span>' : '—'}</td>
           <td class="px-3 py-2">${b.quality || '—'}</td>
+          <td class="px-3 py-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">${b.status || '—'}</span></td>
+          <td class="px-3 py-2"><span class="text-xs text-gray-700">${b.currentOwner || '—'}</span></td>
         </tr>`;
       });
 
@@ -365,9 +422,9 @@
 
     // ----- add batch -----
     async function addBatch() {
-      if (!web3) return alert("Please connect wallet first.");
+      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
       const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return alert("No account found. Unlock MetaMask.");
+      if (!accounts.length) return showModal('warning', 'No Account', 'No account found. Please unlock MetaMask.');
 
       const productName = document.getElementById("productName").value.trim();
       const originFarm = document.getElementById("originFarm").value.trim();
@@ -376,22 +433,22 @@
       const quality = document.getElementById("quality").value.trim();
 
       if (!productName || !originFarm || !farmerName || !harvestDateInput || !quality) {
-        return alert("Please fill all fields.");
+        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
       }
       const harvestDate = dateToTimestamp(harvestDateInput);
       try {
         // This .send() will trigger MetaMask popup automatically because we pass from account
         await contract.methods.addBatch(productName, originFarm, farmerName, harvestDate, quality)
           .send({ from: accounts[0] });
-        alert("✅ Batch added successfully!");
-      } catch (err) { alert("Error: " + err.message); }
+        showModal('success', 'Batch Added!', 'Your batch has been successfully added to the blockchain.');
+      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
     }
 
     // ----- update transport -----
     async function updateTransportInfo() {
-      if (!web3) return alert("Connect wallet first.");
+      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
       const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return alert("No account.");
+      if (!accounts.length) return showModal('warning', 'No Account', 'No account found.');
 
       const batchId = document.getElementById("batchIdTransport").value.trim();
       const transporterName = document.getElementById("transporterName").value.trim();
@@ -400,21 +457,21 @@
       const quality = document.getElementById("qualityTransport").value.trim();
 
       if (!batchId || !transporterName || !transportDetails || !transportDateInput || !quality) {
-        return alert("Please fill all fields.");
+        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
       }
       const transportDate = dateToTimestamp(transportDateInput);
       try {
         await contract.methods.updateTransportInfo(batchId, transporterName, transportDetails, transportDate, quality)
           .send({ from: accounts[0] });
-        alert("🚛 Transport updated!");
-      } catch (err) { alert("Error: " + err.message); }
+        showModal('success', 'Transport Updated!', 'Transport information has been recorded on the blockchain.');
+      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
     }
 
     // ----- update warehouse -----
     async function updateWarehouseInfo() {
-      if (!web3) return alert("Connect wallet first.");
+      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
       const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return alert("No account.");
+      if (!accounts.length) return showModal('warning', 'No Account', 'No account found.');
 
       const batchId = document.getElementById("batchIdWarehouse").value.trim();
       const warehouseName = document.getElementById("warehouseName").value.trim();
@@ -423,21 +480,21 @@
       const quality = document.getElementById("qualityWarehouse").value.trim();
 
       if (!batchId || !warehouseName || !warehouseDetails || !warehouseDateInput || !quality) {
-        return alert("Please fill all fields.");
+        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
       }
       const warehouseDate = dateToTimestamp(warehouseDateInput);
       try {
         await contract.methods.updateWarehouseInfo(batchId, warehouseName, warehouseDetails, warehouseDate, quality)
           .send({ from: accounts[0] });
-        alert("📦 Warehouse info recorded.");
-      } catch (err) { alert("Error: " + err.message); }
+        showModal('success', 'Warehouse Updated!', 'Warehouse information has been recorded on the blockchain.');
+      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
     }
 
     // ----- update retail -----
     async function updateRetailerInfo() {
-      if (!web3) return alert("Connect wallet first.");
+      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
       const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return alert("No account.");
+      if (!accounts.length) return showModal('warning', 'No Account', 'No account found.');
 
       const batchId = document.getElementById("batchIdRetail").value.trim();
       const retailerName = document.getElementById("retailerName").value.trim();
@@ -446,21 +503,21 @@
       const quality = document.getElementById("qualityRetail").value.trim();
 
       if (!batchId || !retailerName || !retailStore || !retailDateInput || !quality) {
-        return alert("Please fill all fields.");
+        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
       }
       const retailDate = dateToTimestamp(retailDateInput);
       try {
         await contract.methods.updateRetailerInfo(batchId, retailerName, retailStore, retailDate, quality)
           .send({ from: accounts[0] });
-        alert("🏪 Retail step completed.");
-      } catch (err) { alert("Error: " + err.message); }
+        showModal('success', 'Retail Updated!', 'Retail information has been recorded on the blockchain.');
+      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
     }
 
     // ----- get batch by farmer name + render table, not JSON -----
     async function getBatch() {
-      if (!web3) return alert("Please connect wallet first.");
+      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
       const farmerName = document.getElementById("farmerNameInput").value.trim();
-      if (!farmerName) return alert("Enter a farmer name.");
+      if (!farmerName) return showModal('warning', 'Missing Input', 'Please enter a farmer name.');
 
       try {
         const batchIds = await contract.methods.getBatchesByFarmer(farmerName).call();
