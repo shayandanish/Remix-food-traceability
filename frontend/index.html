@@ -1,388 +1,559 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verdant Chain · Fruit Traceability</title>
+    <!-- Web3 & Tailwind -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- abi.js (expected to contain contract ABI & address) -->
+    <script src="abi.js"></script>
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      body {
+        background: linear-gradient(145deg, #f4f9f0 0%, #e9f2e3 100%);
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verdant Chain · Fruit Traceability</title>
-  <!-- Web3 & Tailwind -->
-  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- abi.js (expected to contain contract ABI & address) -->
-  <script src="abi.js"></script>
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    body {
-      background: linear-gradient(145deg, #f4f9f0 0%, #e9f2e3 100%);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    }
+      .trace-card {
+        backdrop-filter: blur(2px);
+        transition: all 0.15s ease;
+        border: 1px solid rgba(180, 215, 160, 0.5);
+      }
 
-    .trace-card {
-      backdrop-filter: blur(2px);
-      transition: all 0.15s ease;
-      border: 1px solid rgba(180, 215, 160, 0.5);
-    }
+      .trace-card:hover {
+        border-color: #7ebc6b;
+        box-shadow: 0 15px 30px -12px rgba(40, 100, 40, 0.25);
+      }
 
-    .trace-card:hover {
-      border-color: #7ebc6b;
-      box-shadow: 0 15px 30px -12px rgba(40, 100, 40, 0.25);
-    }
+      .input-fruit {
+        transition: 0.15s;
+        background-color: #fefefc;
+      }
 
-    .input-fruit {
-      transition: 0.15s;
-      background-color: #fefefc;
-    }
+      .input-fruit:focus {
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        outline: none;
+      }
 
-    .input-fruit:focus {
-      border-color: #2e7d32;
-      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
-      outline: none;
-    }
+      .btn-fruit {
+        transition: all 0.1s ease;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
 
-    .btn-fruit {
-      transition: all 0.1s ease;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
+      /* custom table styling */
+      .trace-table {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+      }
 
-    /* custom table styling */
-    .trace-table {
-      border-collapse: separate;
-      border-spacing: 0 8px;
-    }
+      .trace-table th {
+        @apply text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50/80 px-3 py-2 rounded-tl-lg rounded-tr-lg;
+      }
 
-    .trace-table th {
-      @apply text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50/80 px-3 py-2 rounded-tl-lg rounded-tr-lg;
-    }
+      .trace-table td {
+        @apply bg-white/90 px-3 py-2 text-sm text-gray-700 border-b border-green-50;
+      }
 
-    .trace-table td {
-      @apply bg-white/90 px-3 py-2 text-sm text-gray-700 border-b border-green-50;
-    }
+      .batch-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 6px 14px rgba(0, 30, 0, 0.05);
+      }
+    </style>
+  </head>
 
-    .batch-card {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 6px 14px rgba(0, 30, 0, 0.05);
-    }
-  </style>
-</head>
-
-<body class="antialiased">
-
-  <div class="max-w-6xl mx-auto px-4 py-8 md:py-10">
-
-    <!-- header with fresh identity -->
-    <div class="flex flex-col items-center mb-8">
-      <div class="flex items-center gap-3 text-3xl md:text-4xl font-bold text-green-800">
-        <i class="fas fa-seedling text-green-600 text-4xl"></i>
-        <h1 class="bg-clip-text text-transparent bg-gradient-to-r from-green-700 to-lime-600">
-          VerdantChain
-        </h1>
-        <i class="fas fa-apple-alt text-amber-500 text-4xl"></i>
-      </div>
-      <p class="text-gray-600 text-center max-w-xl mt-2 text-base md:text-lg">
-        From orchard to table — every step secured on‑chain
-      </p>
-    </div>
-
-    <!-- wallet card + status -->
-    <div
-      class="bg-white/90 backdrop-blur-sm trace-card rounded-2xl p-5 mb-8 flex flex-col sm:flex-row items-center justify-between shadow-md">
-      <div class="flex items-center gap-2 text-green-800">
-        <i class="fas fa-wallet text-xl"></i>
-        <span class="font-medium">wallet connection</span>
-      </div>
-      <div class="flex flex-wrap items-center gap-4 mt-3 sm:mt-0">
-        <button id="connectButton" onclick="connectWallet()"
-          class="btn-fruit bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-2 rounded-full shadow-sm flex items-center gap-2 text-sm md:text-base">
-          <i class="fas fa-plug"></i> Connect MetaMask
-        </button>
-        <span id="walletAddress"
-          class="text-sm bg-gray-100 px-4 py-2 rounded-full text-gray-700 font-mono truncate max-w-[220px]"></span>
-      </div>
-    </div>
-
-    <!-- grid layout: four functional cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-      <!-- 1. Add Batch -->
-      <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
-        <div class="flex items-center gap-2 border-b border-green-100 pb-3 mb-3">
-          <i class="fas fa-tractor text-green-700 text-xl"></i>
-          <h3 class="text-lg font-semibold text-gray-800">🌱 register batch</h3>
+  <body class="antialiased">
+    <div class="max-w-6xl mx-auto px-4 py-8 md:py-10">
+      <!-- header with fresh identity -->
+      <div class="flex flex-col items-center mb-8">
+        <div
+          class="flex items-center gap-3 text-3xl md:text-4xl font-bold text-green-800"
+        >
+          <i class="fas fa-seedling text-green-600 text-4xl"></i>
+          <h1
+            class="bg-clip-text text-transparent bg-gradient-to-r from-green-700 to-lime-600"
+          >
+            VerdantChain
+          </h1>
+          <i class="fas fa-apple-alt text-amber-500 text-4xl"></i>
         </div>
-        <div class="space-y-3">
-          <input id="productName" placeholder="Product name (e.g. Fuji Apple)"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="originFarm" placeholder="Farm name / location"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="farmerName" placeholder="Farmer name"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <div class="relative">
-            <i class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"></i>
-            <input id="harvestDate" type="date"
-              class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm">
-          </div>
-          <input id="quality" placeholder="Initial quality (e.g. Premium, A)"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <button onclick="addBatch()"
-            class="btn-fruit w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-plus-circle"></i> create batch
+        <p class="text-gray-600 text-center max-w-xl mt-2 text-base md:text-lg">
+          From orchard to table every step secured on‑chain
+        </p>
+      </div>
+
+      <!-- wallet card + status -->
+      <div
+        class="bg-white/90 backdrop-blur-sm trace-card rounded-2xl p-5 mb-8 flex flex-col sm:flex-row items-center justify-between shadow-md"
+      >
+        <div class="flex items-center gap-2 text-green-800">
+          <i class="fas fa-wallet text-xl"></i>
+          <span class="font-medium">wallet connection</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 mt-3 sm:mt-0">
+          <button
+            id="connectButton"
+            onclick="connectWallet()"
+            class="btn-fruit bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-2 rounded-full shadow-sm flex items-center gap-2 text-sm md:text-base"
+          >
+            <i class="fas fa-plug"></i> Connect MetaMask
           </button>
+          <span
+            id="walletAddress"
+            class="text-sm bg-gray-100 px-4 py-2 rounded-full text-gray-700 font-mono truncate max-w-[220px]"
+          ></span>
         </div>
       </div>
 
-      <!-- 2. Update Transport -->
-      <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
-        <div class="flex items-center gap-2 border-b border-amber-100 pb-3 mb-3">
-          <i class="fas fa-truck text-amber-600 text-xl"></i>
-          <h3 class="text-lg font-semibold text-gray-800">🚚 transport update</h3>
-        </div>
-        <div class="space-y-3">
-          <input id="batchIdTransport" placeholder="Batch ID (numeric)"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="transporterName" placeholder="Transporter / company"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="transportDetails" placeholder="Details (vehicle, route)"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <div class="relative">
-            <i class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"></i>
-            <input id="transportDate" type="date"
-              class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm">
+      <!-- grid layout: four functional cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 1. Add Batch -->
+        <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
+          <div
+            class="flex items-center gap-2 border-b border-green-100 pb-3 mb-3"
+          >
+            <i class="fas fa-tractor text-green-700 text-xl"></i>
+            <h3 class="text-lg font-semibold text-gray-800">
+              🌱 Register Batch
+            </h3>
           </div>
-          <input id="qualityTransport" placeholder="Quality during transport"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <button onclick="updateTransportInfo()"
-            class="btn-fruit w-full bg-gradient-to-r from-amber-500 to-orange-400 hover:from-amber-600 hover:to-orange-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-pen"></i> record transport
-          </button>
-        </div>
-      </div>
-
-      <!-- 3. Update Warehouse -->
-      <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
-        <div class="flex items-center gap-2 border-b border-purple-100 pb-3 mb-3">
-          <i class="fas fa-warehouse text-purple-600 text-xl"></i>
-          <h3 class="text-lg font-semibold text-gray-800">📦 warehouse entry</h3>
-        </div>
-        <div class="space-y-3">
-          <input id="batchIdWarehouse" placeholder="Batch ID"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="warehouseName" placeholder="Warehouse facility"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="warehouseDetails" placeholder="Storage conditions"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <div class="relative">
-            <i class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"></i>
-            <input id="warehouseDate" type="date"
-              class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm">
-          </div>
-          <input id="qualityWarehouse" placeholder="Quality in warehouse"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <button onclick="updateWarehouseInfo()"
-            class="btn-fruit w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-pallet"></i> store record
-          </button>
-        </div>
-      </div>
-
-      <!-- 4. Update Retail -->
-      <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
-        <div class="flex items-center gap-2 border-b border-pink-100 pb-3 mb-3">
-          <i class="fas fa-store text-pink-500 text-xl"></i>
-          <h3 class="text-lg font-semibold text-gray-800">🏪 retail final</h3>
-        </div>
-        <div class="space-y-3">
-          <input id="batchIdRetail" placeholder="Batch ID"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="retailerName" placeholder="Retailer name"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <input id="retailStore" placeholder="Store / outlet"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <div class="relative">
-            <i class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"></i>
-            <input id="retailDate" type="date"
-              class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm">
-          </div>
-          <input id="qualityRetail" placeholder="Final retail quality"
-            class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm">
-          <button onclick="updateRetailerInfo()"
-            class="btn-fruit w-full bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-cash-register"></i> complete retail
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TRACE BY FARMER – with nicely formatted table (instead of raw JSON) -->
-    <div class="mt-8 trace-card bg-white rounded-2xl p-6 shadow-sm">
-      <div class="flex items-center gap-3 border-b border-indigo-100 pb-3 mb-4">
-        <i class="fas fa-search text-indigo-500 text-2xl"></i>
-        <h3 class="text-xl font-semibold text-gray-800">🔍 trace by farmer</h3>
-      </div>
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <div class="relative flex-1 w-full">
-          <i class="fas fa-user absolute left-4 top-3.5 text-gray-400 text-sm"></i>
-          <input id="farmerNameInput" placeholder="enter farmer name exactly"
-            class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm">
-        </div>
-        <button onclick="getBatch()"
-          class="btn-fruit bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 whitespace-nowrap">
-          <i class="fas fa-eye"></i> fetch batches
-        </button>
-      </div>
-
-      <!-- Batch results displayed in a clean table, not JSON blob -->
-      <div id="batchResultContainer" class="mt-6 overflow-x-auto">
-        <!-- dynamic table will be injected here -->
-      </div>
-      <div id="batchEmptyMessage" class="text-gray-500 italic text-center py-6 hidden">No batches found for this farmer.
-      </div>
-    </div>
-
-    <!-- Transaction Modal -->
-    <div id="transactionModal"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
-        <div class="p-6">
-          <div class="flex items-center justify-center mb-4">
-            <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center">
-              <!-- Icon will be inserted here -->
+          <div class="space-y-3">
+            <input
+              id="productName"
+              placeholder="Product name (e.g. Fuji Apple)"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="originFarm"
+              placeholder="Farm name / location"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="farmerName"
+              placeholder="Farmer name"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <div class="relative">
+              <i
+                class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"
+              ></i>
+              <input
+                id="harvestDate"
+                type="date"
+                class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm"
+              />
             </div>
+            <input
+              id="quality"
+              placeholder="Initial quality (e.g. Premium, A)"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <button
+              onclick="addBatch()"
+              class="btn-fruit w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus-circle"></i> create batch
+            </button>
           </div>
-          <h3 id="modalTitle" class="text-xl font-bold text-center text-gray-800 mb-2"></h3>
-          <p id="modalMessage" class="text-center text-gray-600 mb-6"></p>
-          <button onclick="closeModal()"
-            class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-3 rounded-xl font-medium transition-all">
-            Close
+        </div>
+
+        <!-- 2. Update Transport -->
+        <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
+          <div
+            class="flex items-center gap-2 border-b border-amber-100 pb-3 mb-3"
+          >
+            <i class="fas fa-truck text-amber-600 text-xl"></i>
+            <h3 class="text-lg font-semibold text-gray-800">
+              🚚 Transport Update
+            </h3>
+          </div>
+          <div class="space-y-3">
+            <input
+              id="batchIdTransport"
+              placeholder="Batch ID (numeric)"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="transporterName"
+              placeholder="Transporter / company"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="transportDetails"
+              placeholder="Details (vehicle, route)"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <div class="relative">
+              <i
+                class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"
+              ></i>
+              <input
+                id="transportDate"
+                type="date"
+                class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm"
+              />
+            </div>
+            <input
+              id="qualityTransport"
+              placeholder="Quality during transport"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <button
+              onclick="updateTransportInfo()"
+              class="btn-fruit w-full bg-gradient-to-r from-amber-500 to-orange-400 hover:from-amber-600 hover:to-orange-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-pen"></i> record transport
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Update Warehouse -->
+        <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
+          <div
+            class="flex items-center gap-2 border-b border-purple-100 pb-3 mb-3"
+          >
+            <i class="fas fa-warehouse text-purple-600 text-xl"></i>
+            <h3 class="text-lg font-semibold text-gray-800">
+              📦 Warehouse Entry
+            </h3>
+          </div>
+          <div class="space-y-3">
+            <input
+              id="batchIdWarehouse"
+              placeholder="Batch ID"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="warehouseName"
+              placeholder="Warehouse facility"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="warehouseDetails"
+              placeholder="Storage conditions"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <div class="relative">
+              <i
+                class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"
+              ></i>
+              <input
+                id="warehouseDate"
+                type="date"
+                class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm"
+              />
+            </div>
+            <input
+              id="qualityWarehouse"
+              placeholder="Quality in warehouse"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <button
+              onclick="updateWarehouseInfo()"
+              class="btn-fruit w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-pallet"></i> store record
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Update Retail -->
+        <div class="trace-card bg-white rounded-2xl p-5 shadow-sm">
+          <div
+            class="flex items-center gap-2 border-b border-pink-100 pb-3 mb-3"
+          >
+            <i class="fas fa-store text-pink-500 text-xl"></i>
+            <h3 class="text-lg font-semibold text-gray-800">🏪 Retail inal</h3>
+          </div>
+          <div class="space-y-3">
+            <input
+              id="batchIdRetail"
+              placeholder="Batch ID"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="retailerName"
+              placeholder="Retailer name"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <input
+              id="retailStore"
+              placeholder="Store / outlet"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <div class="relative">
+              <i
+                class="fas fa-calendar-alt absolute left-3 top-3.5 text-gray-400 text-sm"
+              ></i>
+              <input
+                id="retailDate"
+                type="date"
+                class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm"
+              />
+            </div>
+            <input
+              id="qualityRetail"
+              placeholder="Final retail quality"
+              class="input-fruit w-full p-3 border border-gray-200 rounded-xl text-sm"
+            />
+            <button
+              onclick="updateRetailerInfo()"
+              class="btn-fruit w-full bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-cash-register"></i> complete retail
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACE BY FARMER – with nicely formatted table (instead of raw JSON) -->
+      <div class="mt-8 trace-card bg-white rounded-2xl p-6 shadow-sm">
+        <div
+          class="flex items-center gap-3 border-b border-indigo-100 pb-3 mb-4"
+        >
+          <i class="fas fa-search text-indigo-500 text-2xl"></i>
+          <h3 class="text-xl font-semibold text-gray-800">
+            🔍 trace by farmer
+          </h3>
+        </div>
+        <div
+          class="flex flex-col sm:flex-row gap-3 items-start sm:items-center"
+        >
+          <div class="relative flex-1 w-full">
+            <i
+              class="fas fa-user absolute left-4 top-3.5 text-gray-400 text-sm"
+            ></i>
+            <input
+              id="farmerNameInput"
+              placeholder="enter farmer name "
+              class="input-fruit w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm"
+            />
+          </div>
+          <button
+            onclick="getBatch()"
+            class="btn-fruit bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 whitespace-nowrap"
+          >
+            <i class="fas fa-eye"></i> fetch batches
           </button>
         </div>
+
+        <!-- Batch results displayed in a clean table, not JSON blob -->
+        <div id="batchResultContainer" class="mt-6 overflow-x-auto">
+          <!-- dynamic table will be injected here -->
+        </div>
+        <div
+          id="batchEmptyMessage"
+          class="text-gray-500 italic text-center py-6 hidden"
+        >
+          No batches found for this farmer.
+        </div>
+      </div>
+
+      <!-- Transaction Modal -->
+      <div
+        id="transactionModal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden"
+      >
+        <div
+          class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all"
+        >
+          <div class="p-6">
+            <div class="flex items-center justify-center mb-4">
+              <div
+                id="modalIcon"
+                class="w-16 h-16 rounded-full flex items-center justify-center"
+              >
+                <!-- Icon will be inserted here -->
+              </div>
+            </div>
+            <h3
+              id="modalTitle"
+              class="text-xl font-bold text-center text-gray-800 mb-2"
+            ></h3>
+            <p id="modalMessage" class="text-center text-gray-600 mb-6"></p>
+            <button
+              onclick="closeModal()"
+              class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-3 rounded-xl font-medium transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- tiny footer -->
+      <div
+        class="text-center text-xs text-green-700/50 mt-8 flex items-center justify-center gap-2"
+      >
+        <i class="fas fa-leaf"></i>
+        <span>farm‑to‑customer transparency • powered by blockchain</span>
+        <i class="fas fa-leaf"></i>
       </div>
     </div>
 
-    <!-- tiny footer -->
-    <div class="text-center text-xs text-green-700/50 mt-8 flex items-center justify-center gap-2">
-      <i class="fas fa-leaf"></i>
-      <span>farm‑to‑customer transparency • powered by blockchain</span>
-      <i class="fas fa-leaf"></i>
-    </div>
-  </div>
+    <script>
+      // ----- web3 & contract globals -----
+      let web3;
+      let contract;
 
-  <script>
-    // ----- web3 & contract globals -----
-    let web3;
-    let contract;
+      // ----- connect wallet (MetaMask) -----
+      async function connectWallet() {
+        const connectButton = document.getElementById("connectButton");
+        const walletAddressEl = document.getElementById("walletAddress");
 
-    // ----- connect wallet (MetaMask) -----
-    async function connectWallet() {
-      const connectButton = document.getElementById("connectButton");
-      const walletAddressEl = document.getElementById("walletAddress");
-
-      if (window.ethereum) {
-        try {
-          // Request accounts - this triggers MetaMask popup
-          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-          web3 = new Web3(window.ethereum);
-          // contract is expected to be built from abi.js (global abi + contractAddress)
-          contract = new web3.eth.Contract(abi, contractAddress);
-          const account = accounts[0];
-          connectButton.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
-          connectButton.disabled = true;
-          connectButton.classList.remove('from-emerald-600', 'to-green-600', 'hover:from-emerald-700', 'hover:to-green-700');
-          connectButton.classList.add('from-gray-400', 'to-gray-400', 'cursor-not-allowed', 'opacity-80');
-          walletAddressEl.textContent = `🔗 ${account.slice(0, 6)}...${account.slice(-4)}`;
-
-          // --- important: force popup for transactions by using send() with from field ---
-          // (no extra code needed, but we need to ensure contract methods use {from: account})
-        } catch (err) {
-          showModal('error', 'Connection Failed', err.message);
-        }
-      } else {
-        showModal('error', 'MetaMask Not Found', 'Please install MetaMask to use this application.');
-      }
-    }
-
-    // ----- auto-connect if already authorized -----
-    window.addEventListener("load", async () => {
-      if (window.ethereum && window.ethereum.selectedAddress) {
-        try {
-          const accounts = await window.ethereum.request({ method: "eth_accounts" });
-          if (accounts.length > 0) {
-            const connectButton = document.getElementById("connectButton");
-            const walletAddressEl = document.getElementById("walletAddress");
+        if (window.ethereum) {
+          try {
+            // Request accounts - this triggers MetaMask popup
+            const accounts = await window.ethereum.request({
+              method: "eth_requestAccounts",
+            });
             web3 = new Web3(window.ethereum);
+            // contract is expected to be built from abi.js (global abi + contractAddress)
             contract = new web3.eth.Contract(abi, contractAddress);
-            connectButton.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+            const account = accounts[0];
+            connectButton.innerHTML =
+              '<i class="fas fa-check-circle"></i> Connected';
             connectButton.disabled = true;
-            connectButton.classList.remove('from-emerald-600', 'to-green-600', 'hover:from-emerald-700', 'hover:to-green-700');
-            connectButton.classList.add('from-gray-400', 'to-gray-400', 'cursor-not-allowed', 'opacity-80');
-            walletAddressEl.textContent = `🔗 ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
+            connectButton.classList.remove(
+              "from-emerald-600",
+              "to-green-600",
+              "hover:from-emerald-700",
+              "hover:to-green-700",
+            );
+            connectButton.classList.add(
+              "from-gray-400",
+              "to-gray-400",
+              "cursor-not-allowed",
+              "opacity-80",
+            );
+            walletAddressEl.textContent = `🔗 ${account.slice(0, 6)}...${account.slice(-4)}`;
+
+            // --- important: force popup for transactions by using send() with from field ---
+            // (no extra code needed, but we need to ensure contract methods use {from: account})
+          } catch (err) {
+            showModal("error", "Connection Failed", err.message);
           }
-        } catch (e) { }
-      }
-    });
-
-    // ----- Modal Helper Functions -----
-    function showModal(type, title, message) {
-      const modal = document.getElementById('transactionModal');
-      const modalIcon = document.getElementById('modalIcon');
-      const modalTitle = document.getElementById('modalTitle');
-      const modalMessage = document.getElementById('modalMessage');
-
-      // Set content
-      modalTitle.textContent = title;
-      modalMessage.textContent = message;
-
-      // Set icon based on type
-      if (type === 'success') {
-        modalIcon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-green-100';
-        modalIcon.innerHTML = '<i class="fas fa-check-circle text-green-600 text-4xl"></i>';
-      } else if (type === 'error') {
-        modalIcon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-red-100';
-        modalIcon.innerHTML = '<i class="fas fa-times-circle text-red-600 text-4xl"></i>';
-      } else if (type === 'warning') {
-        modalIcon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-yellow-100';
-        modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-yellow-600 text-4xl"></i>';
+        } else {
+          showModal(
+            "error",
+            "MetaMask Not Found",
+            "Please install MetaMask to use this application.",
+          );
+        }
       }
 
-      // Show modal
-      modal.classList.remove('hidden');
-    }
+      // ----- auto-connect if already authorized -----
+      window.addEventListener("load", async () => {
+        if (window.ethereum && window.ethereum.selectedAddress) {
+          try {
+            const accounts = await window.ethereum.request({
+              method: "eth_accounts",
+            });
+            if (accounts.length > 0) {
+              const connectButton = document.getElementById("connectButton");
+              const walletAddressEl = document.getElementById("walletAddress");
+              web3 = new Web3(window.ethereum);
+              contract = new web3.eth.Contract(abi, contractAddress);
+              connectButton.innerHTML =
+                '<i class="fas fa-check-circle"></i> Connected';
+              connectButton.disabled = true;
+              connectButton.classList.remove(
+                "from-emerald-600",
+                "to-green-600",
+                "hover:from-emerald-700",
+                "hover:to-green-700",
+              );
+              connectButton.classList.add(
+                "from-gray-400",
+                "to-gray-400",
+                "cursor-not-allowed",
+                "opacity-80",
+              );
+              walletAddressEl.textContent = `🔗 ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
+            }
+          } catch (e) {}
+        }
+      });
 
-    function closeModal() {
-      document.getElementById('transactionModal').classList.add('hidden');
-    }
+      // ----- Modal Helper Functions -----
+      function showModal(type, title, message) {
+        const modal = document.getElementById("transactionModal");
+        const modalIcon = document.getElementById("modalIcon");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalMessage = document.getElementById("modalMessage");
 
-    // ----- helper: date to unix timestamp (seconds) -----
-    function dateToTimestamp(dateString) {
-      return Math.floor(new Date(dateString).getTime() / 1000);
-    }
+        // Set content
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
 
-    // ----- format timestamp to YYYY-MM-DD -----
-    function formatDateFromTimestamp(timestamp) {
-      if (!timestamp) return '—';
-      const ts = typeof timestamp === 'bigint' ? Number(timestamp) : Number(timestamp);
-      const date = new Date(ts * 1000);
-      if (isNaN(date)) return '—';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
+        // Set icon based on type
+        if (type === "success") {
+          modalIcon.className =
+            "w-16 h-16 rounded-full flex items-center justify-center bg-green-100";
+          modalIcon.innerHTML =
+            '<i class="fas fa-check-circle text-green-600 text-4xl"></i>';
+        } else if (type === "error") {
+          modalIcon.className =
+            "w-16 h-16 rounded-full flex items-center justify-center bg-red-100";
+          modalIcon.innerHTML =
+            '<i class="fas fa-times-circle text-red-600 text-4xl"></i>';
+        } else if (type === "warning") {
+          modalIcon.className =
+            "w-16 h-16 rounded-full flex items-center justify-center bg-yellow-100";
+          modalIcon.innerHTML =
+            '<i class="fas fa-exclamation-triangle text-yellow-600 text-4xl"></i>';
+        }
 
-    // ----- helper to render batch table nicely -----
-    function renderBatchTable(batches) {
-      const container = document.getElementById('batchResultContainer');
-      const emptyMsg = document.getElementById('batchEmptyMessage');
-      if (!batches || batches.length === 0) {
-        container.innerHTML = '';
-        emptyMsg.classList.remove('hidden');
-        return;
+        // Show modal
+        modal.classList.remove("hidden");
       }
-      emptyMsg.classList.add('hidden');
 
-      let html = `<table class="w-full text-left trace-table border-separate border-spacing-0 border-spacing-y-2">
+      function closeModal() {
+        document.getElementById("transactionModal").classList.add("hidden");
+      }
+
+      // ----- helper: date to unix timestamp (seconds) -----
+      function dateToTimestamp(dateString) {
+        return Math.floor(new Date(dateString).getTime() / 1000);
+      }
+
+      // ----- format timestamp to YYYY-MM-DD -----
+      function formatDateFromTimestamp(timestamp) {
+        if (!timestamp) return "—";
+        const ts =
+          typeof timestamp === "bigint" ? Number(timestamp) : Number(timestamp);
+        const date = new Date(ts * 1000);
+        if (isNaN(date)) return "—";
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      // ----- helper to render batch table nicely -----
+      function renderBatchTable(batches) {
+        const container = document.getElementById("batchResultContainer");
+        const emptyMsg = document.getElementById("batchEmptyMessage");
+        if (!batches || batches.length === 0) {
+          container.innerHTML = "";
+          emptyMsg.classList.remove("hidden");
+          return;
+        }
+        emptyMsg.classList.add("hidden");
+
+        let html = `<table class="w-full text-left trace-table border-separate border-spacing-0 border-spacing-y-2">
         <thead class="bg-green-50/50 rounded-lg">
           <tr>
             <th class="px-3 py-2 rounded-l-lg">Batch ID</th>
@@ -400,158 +571,314 @@
         </thead>
         <tbody class="text-sm">`;
 
-      batches.forEach(b => {
-        html += `<tr class="bg-white/90 shadow-sm rounded-lg hover:bg-green-50/50 transition">
-          <td class="px-3 py-2 font-mono text-xs">${b.batchId || '—'}</td>
-          <td class="px-3 py-2">${b.productName || '—'}</td>
-          <td class="px-3 py-2">${b.originFarm || '—'}</td>
-          <td class="px-3 py-2">${b.harvestDate || '—'}</td>
-          <td class="px-3 py-2">${b.farmerName || '—'}</td>
-          <td class="px-3 py-2">${b.transporterName ? b.transporterName + '<br><span class="text-xs text-gray-500">' + (b.transportDate || '') + '</span>' : '—'}</td>
-          <td class="px-3 py-2">${b.warehouseName ? b.warehouseName + '<br><span class="text-xs text-gray-500">' + (b.warehouseDate || '') + '</span>' : '—'}</td>
-          <td class="px-3 py-2">${b.retailerName ? b.retailerName + '<br><span class="text-xs text-gray-500">' + (b.retailDate || '') + '</span>' : '—'}</td>
-          <td class="px-3 py-2">${b.quality || '—'}</td>
-          <td class="px-3 py-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">${b.status || '—'}</span></td>
-          <td class="px-3 py-2"><span class="text-xs text-gray-700">${b.currentOwner || '—'}</span></td>
+        batches.forEach((b) => {
+          html += `<tr class="bg-white/90 shadow-sm rounded-lg hover:bg-green-50/50 transition">
+          <td class="px-3 py-2 font-mono text-xs">${b.batchId || "—"}</td>
+          <td class="px-3 py-2">${b.productName || "—"}</td>
+          <td class="px-3 py-2">${b.originFarm || "—"}</td>
+          <td class="px-3 py-2">${b.harvestDate || "—"}</td>
+          <td class="px-3 py-2">${b.farmerName || "—"}</td>
+          <td class="px-3 py-2">${b.transporterName ? b.transporterName + '<br><span class="text-xs text-gray-500">' + (b.transportDate || "") + "</span>" : "—"}</td>
+          <td class="px-3 py-2">${b.warehouseName ? b.warehouseName + '<br><span class="text-xs text-gray-500">' + (b.warehouseDate || "") + "</span>" : "—"}</td>
+          <td class="px-3 py-2">${b.retailerName ? b.retailerName + '<br><span class="text-xs text-gray-500">' + (b.retailDate || "") + "</span>" : "—"}</td>
+          <td class="px-3 py-2">${b.quality || "—"}</td>
+          <td class="px-3 py-2"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">${b.status || "—"}</span></td>
+          <td class="px-3 py-2"><span class="text-xs text-gray-700">${b.currentOwner || "—"}</span></td>
         </tr>`;
-      });
+        });
 
-      html += `</tbody></table>`;
-      container.innerHTML = html;
-    }
-
-    // ----- add batch -----
-    async function addBatch() {
-      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
-      const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return showModal('warning', 'No Account', 'No account found. Please unlock MetaMask.');
-
-      const productName = document.getElementById("productName").value.trim();
-      const originFarm = document.getElementById("originFarm").value.trim();
-      const farmerName = document.getElementById("farmerName").value.trim();
-      const harvestDateInput = document.getElementById("harvestDate").value;
-      const quality = document.getElementById("quality").value.trim();
-
-      if (!productName || !originFarm || !farmerName || !harvestDateInput || !quality) {
-        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
+        html += `</tbody></table>`;
+        container.innerHTML = html;
       }
-      const harvestDate = dateToTimestamp(harvestDateInput);
-      try {
-        // This .send() will trigger MetaMask popup automatically because we pass from account
-        await contract.methods.addBatch(productName, originFarm, farmerName, harvestDate, quality)
-          .send({ from: accounts[0] });
-        showModal('success', 'Batch Added!', 'Your batch has been successfully added to the blockchain.');
-      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
-    }
 
-    // ----- update transport -----
-    async function updateTransportInfo() {
-      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
-      const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return showModal('warning', 'No Account', 'No account found.');
+      // ----- add batch -----
+      async function addBatch() {
+        if (!web3)
+          return showModal(
+            "warning",
+            "Wallet Not Connected",
+            "Please connect your wallet first.",
+          );
+        const accounts = await web3.eth.getAccounts();
+        if (!accounts.length)
+          return showModal(
+            "warning",
+            "No Account",
+            "No account found. Please unlock MetaMask.",
+          );
 
-      const batchId = document.getElementById("batchIdTransport").value.trim();
-      const transporterName = document.getElementById("transporterName").value.trim();
-      const transportDetails = document.getElementById("transportDetails").value.trim();
-      const transportDateInput = document.getElementById("transportDate").value;
-      const quality = document.getElementById("qualityTransport").value.trim();
+        const productName = document.getElementById("productName").value.trim();
+        const originFarm = document.getElementById("originFarm").value.trim();
+        const farmerName = document.getElementById("farmerName").value.trim();
+        const harvestDateInput = document.getElementById("harvestDate").value;
+        const quality = document.getElementById("quality").value.trim();
 
-      if (!batchId || !transporterName || !transportDetails || !transportDateInput || !quality) {
-        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
-      }
-      const transportDate = dateToTimestamp(transportDateInput);
-      try {
-        await contract.methods.updateTransportInfo(batchId, transporterName, transportDetails, transportDate, quality)
-          .send({ from: accounts[0] });
-        showModal('success', 'Transport Updated!', 'Transport information has been recorded on the blockchain.');
-      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
-    }
-
-    // ----- update warehouse -----
-    async function updateWarehouseInfo() {
-      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
-      const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return showModal('warning', 'No Account', 'No account found.');
-
-      const batchId = document.getElementById("batchIdWarehouse").value.trim();
-      const warehouseName = document.getElementById("warehouseName").value.trim();
-      const warehouseDetails = document.getElementById("warehouseDetails").value.trim();
-      const warehouseDateInput = document.getElementById("warehouseDate").value;
-      const quality = document.getElementById("qualityWarehouse").value.trim();
-
-      if (!batchId || !warehouseName || !warehouseDetails || !warehouseDateInput || !quality) {
-        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
-      }
-      const warehouseDate = dateToTimestamp(warehouseDateInput);
-      try {
-        await contract.methods.updateWarehouseInfo(batchId, warehouseName, warehouseDetails, warehouseDate, quality)
-          .send({ from: accounts[0] });
-        showModal('success', 'Warehouse Updated!', 'Warehouse information has been recorded on the blockchain.');
-      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
-    }
-
-    // ----- update retail -----
-    async function updateRetailerInfo() {
-      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
-      const accounts = await web3.eth.getAccounts();
-      if (!accounts.length) return showModal('warning', 'No Account', 'No account found.');
-
-      const batchId = document.getElementById("batchIdRetail").value.trim();
-      const retailerName = document.getElementById("retailerName").value.trim();
-      const retailStore = document.getElementById("retailStore").value.trim();
-      const retailDateInput = document.getElementById("retailDate").value;
-      const quality = document.getElementById("qualityRetail").value.trim();
-
-      if (!batchId || !retailerName || !retailStore || !retailDateInput || !quality) {
-        return showModal('warning', 'Missing Fields', 'Please fill in all fields.');
-      }
-      const retailDate = dateToTimestamp(retailDateInput);
-      try {
-        await contract.methods.updateRetailerInfo(batchId, retailerName, retailStore, retailDate, quality)
-          .send({ from: accounts[0] });
-        showModal('success', 'Retail Updated!', 'Retail information has been recorded on the blockchain.');
-      } catch (err) { showModal('error', 'Transaction Failed', err.message); }
-    }
-
-    // ----- get batch by farmer name + render table, not JSON -----
-    async function getBatch() {
-      if (!web3) return showModal('warning', 'Wallet Not Connected', 'Please connect your wallet first.');
-      const farmerName = document.getElementById("farmerNameInput").value.trim();
-      if (!farmerName) return showModal('warning', 'Missing Input', 'Please enter a farmer name.');
-
-      try {
-        const batchIds = await contract.methods.getBatchesByFarmer(farmerName).call();
-        const batchDetails = [];
-
-        for (const batchId of batchIds) {
-          const batch = await contract.methods.batches(batchId).call();
-          batchDetails.push({
-            batchId: batch.batchId?.toString(),
-            productName: batch.farmer?.productName || '',
-            originFarm: batch.farmer?.originFarm || '',
-            farmerName: batch.farmer?.farmerName || '',
-            harvestDate: batch.farmer?.harvestDate ? formatDateFromTimestamp(batch.farmer.harvestDate) : '',
-            transporterName: batch.transport?.transporterName || '',
-            transportDetails: batch.transport?.transportDetails || '',
-            transportDate: batch.transport?.transportDate ? formatDateFromTimestamp(batch.transport.transportDate) : '',
-            warehouseName: batch.warehouse?.warehouseName || '',
-            warehouseDetails: batch.warehouse?.warehouseDetails || '',
-            warehouseDate: batch.warehouse?.warehouseDate ? formatDateFromTimestamp(batch.warehouse.warehouseDate) : '',
-            retailerName: batch.retailer?.retailerName || '',
-            retailStore: batch.retailer?.retailStore || '',
-            retailDate: batch.retailer?.retailDate ? formatDateFromTimestamp(batch.retailer.retailDate) : '',
-            quality: batch.quality || '',
-            currentOwner: batch.currentOwner || '',
-            status: batch.status || '',
-          });
+        if (
+          !productName ||
+          !originFarm ||
+          !farmerName ||
+          !harvestDateInput ||
+          !quality
+        ) {
+          return showModal(
+            "warning",
+            "Missing Fields",
+            "Please fill in all fields.",
+          );
         }
-
-        renderBatchTable(batchDetails);
-      } catch (err) {
-        document.getElementById('batchResultContainer').innerHTML = `<div class="text-red-500 p-4">⚠️ Error: ${err.message}</div>`;
+        const harvestDate = dateToTimestamp(harvestDateInput);
+        try {
+          // This .send() will trigger MetaMask popup automatically because we pass from account
+          await contract.methods
+            .addBatch(productName, originFarm, farmerName, harvestDate, quality)
+            .send({ from: accounts[0] });
+          showModal(
+            "success",
+            "Batch Added!",
+            "Your batch has been successfully added to the blockchain.",
+          );
+        } catch (err) {
+          showModal("error", "Transaction Failed", err.message);
+        }
       }
-    }
-  </script>
-</body>
 
+      // ----- update transport -----
+      async function updateTransportInfo() {
+        if (!web3)
+          return showModal(
+            "warning",
+            "Wallet Not Connected",
+            "Please connect your wallet first.",
+          );
+        const accounts = await web3.eth.getAccounts();
+        if (!accounts.length)
+          return showModal("warning", "No Account", "No account found.");
+
+        const batchId = document
+          .getElementById("batchIdTransport")
+          .value.trim();
+        const transporterName = document
+          .getElementById("transporterName")
+          .value.trim();
+        const transportDetails = document
+          .getElementById("transportDetails")
+          .value.trim();
+        const transportDateInput =
+          document.getElementById("transportDate").value;
+        const quality = document
+          .getElementById("qualityTransport")
+          .value.trim();
+
+        if (
+          !batchId ||
+          !transporterName ||
+          !transportDetails ||
+          !transportDateInput ||
+          !quality
+        ) {
+          return showModal(
+            "warning",
+            "Missing Fields",
+            "Please fill in all fields.",
+          );
+        }
+        const transportDate = dateToTimestamp(transportDateInput);
+        try {
+          await contract.methods
+            .updateTransportInfo(
+              batchId,
+              transporterName,
+              transportDetails,
+              transportDate,
+              quality,
+            )
+            .send({ from: accounts[0] });
+          showModal(
+            "success",
+            "Transport Updated!",
+            "Transport information has been recorded on the blockchain.",
+          );
+        } catch (err) {
+          showModal("error", "Transaction Failed", err.message);
+        }
+      }
+
+      // ----- update warehouse -----
+      async function updateWarehouseInfo() {
+        if (!web3)
+          return showModal(
+            "warning",
+            "Wallet Not Connected",
+            "Please connect your wallet first.",
+          );
+        const accounts = await web3.eth.getAccounts();
+        if (!accounts.length)
+          return showModal("warning", "No Account", "No account found.");
+
+        const batchId = document
+          .getElementById("batchIdWarehouse")
+          .value.trim();
+        const warehouseName = document
+          .getElementById("warehouseName")
+          .value.trim();
+        const warehouseDetails = document
+          .getElementById("warehouseDetails")
+          .value.trim();
+        const warehouseDateInput =
+          document.getElementById("warehouseDate").value;
+        const quality = document
+          .getElementById("qualityWarehouse")
+          .value.trim();
+
+        if (
+          !batchId ||
+          !warehouseName ||
+          !warehouseDetails ||
+          !warehouseDateInput ||
+          !quality
+        ) {
+          return showModal(
+            "warning",
+            "Missing Fields",
+            "Please fill in all fields.",
+          );
+        }
+        const warehouseDate = dateToTimestamp(warehouseDateInput);
+        try {
+          await contract.methods
+            .updateWarehouseInfo(
+              batchId,
+              warehouseName,
+              warehouseDetails,
+              warehouseDate,
+              quality,
+            )
+            .send({ from: accounts[0] });
+          showModal(
+            "success",
+            "Warehouse Updated!",
+            "Warehouse information has been recorded on the blockchain.",
+          );
+        } catch (err) {
+          showModal("error", "Transaction Failed", err.message);
+        }
+      }
+
+      // ----- update retail -----
+      async function updateRetailerInfo() {
+        if (!web3)
+          return showModal(
+            "warning",
+            "Wallet Not Connected",
+            "Please connect your wallet first.",
+          );
+        const accounts = await web3.eth.getAccounts();
+        if (!accounts.length)
+          return showModal("warning", "No Account", "No account found.");
+
+        const batchId = document.getElementById("batchIdRetail").value.trim();
+        const retailerName = document
+          .getElementById("retailerName")
+          .value.trim();
+        const retailStore = document.getElementById("retailStore").value.trim();
+        const retailDateInput = document.getElementById("retailDate").value;
+        const quality = document.getElementById("qualityRetail").value.trim();
+
+        if (
+          !batchId ||
+          !retailerName ||
+          !retailStore ||
+          !retailDateInput ||
+          !quality
+        ) {
+          return showModal(
+            "warning",
+            "Missing Fields",
+            "Please fill in all fields.",
+          );
+        }
+        const retailDate = dateToTimestamp(retailDateInput);
+        try {
+          await contract.methods
+            .updateRetailerInfo(
+              batchId,
+              retailerName,
+              retailStore,
+              retailDate,
+              quality,
+            )
+            .send({ from: accounts[0] });
+          showModal(
+            "success",
+            "Retail Updated!",
+            "Retail information has been recorded on the blockchain.",
+          );
+        } catch (err) {
+          showModal("error", "Transaction Failed", err.message);
+        }
+      }
+
+      // ----- get batch by farmer name + render table, not JSON -----
+      async function getBatch() {
+        if (!web3)
+          return showModal(
+            "warning",
+            "Wallet Not Connected",
+            "Please connect your wallet first.",
+          );
+        const farmerName = document
+          .getElementById("farmerNameInput")
+          .value.trim();
+        if (!farmerName)
+          return showModal(
+            "warning",
+            "Missing Input",
+            "Please enter a farmer name.",
+          );
+
+        try {
+          const batchIds = await contract.methods
+            .getBatchesByFarmer(farmerName)
+            .call();
+          const batchDetails = [];
+
+          for (const batchId of batchIds) {
+            const batch = await contract.methods.batches(batchId).call();
+            batchDetails.push({
+              batchId: batch.batchId?.toString(),
+              productName: batch.farmer?.productName || "",
+              originFarm: batch.farmer?.originFarm || "",
+              farmerName: batch.farmer?.farmerName || "",
+              harvestDate: batch.farmer?.harvestDate
+                ? formatDateFromTimestamp(batch.farmer.harvestDate)
+                : "",
+              transporterName: batch.transport?.transporterName || "",
+              transportDetails: batch.transport?.transportDetails || "",
+              transportDate: batch.transport?.transportDate
+                ? formatDateFromTimestamp(batch.transport.transportDate)
+                : "",
+              warehouseName: batch.warehouse?.warehouseName || "",
+              warehouseDetails: batch.warehouse?.warehouseDetails || "",
+              warehouseDate: batch.warehouse?.warehouseDate
+                ? formatDateFromTimestamp(batch.warehouse.warehouseDate)
+                : "",
+              retailerName: batch.retailer?.retailerName || "",
+              retailStore: batch.retailer?.retailStore || "",
+              retailDate: batch.retailer?.retailDate
+                ? formatDateFromTimestamp(batch.retailer.retailDate)
+                : "",
+              quality: batch.quality || "",
+              currentOwner: batch.currentOwner || "",
+              status: batch.status || "",
+            });
+          }
+
+          renderBatchTable(batchDetails);
+        } catch (err) {
+          document.getElementById("batchResultContainer").innerHTML =
+            `<div class="text-red-500 p-4">⚠️ Error: ${err.message}</div>`;
+        }
+      }
+    </script>
+  </body>
 </html>

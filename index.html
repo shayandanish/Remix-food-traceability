@@ -1,165 +1,228 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VerdantChain · Farm Trust</title>
     <!-- Tailwind + Font Awesome -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <style>
-        body {
-            background: linear-gradient(145deg, #f6fbf2 0%, #e8f3df 100%);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
+      body {
+        background: linear-gradient(145deg, #f6fbf2 0%, #e8f3df 100%);
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(120, 180, 90, 0.25);
-            transition: all 0.2s;
-        }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(120, 180, 90, 0.25);
+        transition: all 0.2s;
+      }
 
-        .glass-card:hover {
-            border-color: #6aab53;
-            box-shadow: 0 20px 30px -15px rgba(60, 120, 40, 0.3);
-        }
+      .glass-card:hover {
+        border-color: #6aab53;
+        box-shadow: 0 20px 30px -15px rgba(60, 120, 40, 0.3);
+      }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-            transition: all 0.15s;
-        }
+      .btn-primary {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        transition: all 0.15s;
+      }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -10px #1b5e20;
-        }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 20px -10px #1b5e20;
+      }
 
-        .fruit-icon {
-            filter: drop-shadow(0 4px 4px rgba(0, 30, 0, 0.1));
-        }
+      .fruit-icon {
+        filter: drop-shadow(0 4px 4px rgba(0, 30, 0, 0.1));
+      }
     </style>
-</head>
+  </head>
 
-<body class="antialiased text-gray-800">
-
+  <body class="antialiased text-gray-800">
     <!-- ========== LANDING PAGE (standalone) ========== -->
     <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
-
-        <!-- header / nav -->
-        <nav class="flex flex-wrap items-center justify-between gap-4 mb-12">
-            <div class="flex items-center gap-2 text-2xl font-bold text-green-800">
-                <i class="fas fa-seedling text-green-600 text-3xl"></i>
-                <span>Verdant<span class="text-lime-600">Chain</span></span>
-            </div>
-            <div class="flex gap-3">
-                <!-- LIVE DEMO button redirects to the specified external page -->
-                <a href="https://shayandanish.github.io/Remix-food-traceability/frontend/index.html" target="_blank"
-                    class="px-5 py-2 bg-white/60 rounded-full text-green-800 hover:bg-green-100 transition flex items-center gap-1">
-                    <i class="fas fa-play-circle"></i> live demo
-                </a>
-                <a href="#about"
-                    class="px-5 py-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition flex items-center gap-1"><i
-                        class="fas fa-leaf"></i> about</a>
-            </div>
-        </nav>
-
-        <!-- hero -->
-        <div class="flex flex-col lg:flex-row items-center gap-12 mb-20">
-            <div class="flex-1 text-center lg:text-left">
-                <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
-                    <span class="text-green-800">From orchard,</span><br>
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-lime-500">to table –
-                        on chain</span>
-                </h1>
-                <p class="text-lg text-gray-700 mt-6 max-w-lg mx-auto lg:mx-0">
-                    Every fruit tells a story. We help farmers, distributors, and consumers trace freshness and fairness
-                    with verifiable blockchain records.
-                </p>
-                <div class="flex flex-wrap gap-4 mt-8 justify-center lg:justify-start">
-                    <!-- QR demo button redirects to the separate QR page (saved as qr-viewer.html) -->
-                    <a href="https://shayandanish.github.io/Remix-food-traceability/frontend/qrcode.html"
-                        class="btn-primary text-white px-8 py-3 rounded-full font-medium flex items-center gap-2 shadow-lg">
-                        <i class="fas fa-qrcode"></i> QR scanner demo
-                    </a>
-                    <a href="#features"
-                        class="bg-white/80 text-green-800 px-8 py-3 rounded-full font-medium border border-green-200 hover:bg-white flex items-center gap-2">
-                        <i class="fas fa-apple-alt"></i> how it works
-                    </a>
-                </div>
-                <div class="mt-8 flex items-center gap-4 text-sm text-gray-600 justify-center lg:justify-start">
-                    <span><i class="fas fa-check-circle text-green-600"></i> farm verified</span>
-                    <span><i class="fas fa-check-circle text-green-600"></i> transport tracked</span>
-                    <span><i class="fas fa-check-circle text-green-600"></i> retailer trusted</span>
-                </div>
-            </div>
-            <div class="flex-1 flex justify-center fruit-icon">
-                <div class="relative">
-                    <div class="w-72 h-72 bg-green-100 rounded-full opacity-30 absolute blur-3xl"></div>
-                    <img src="https://img.icons8.com/fluency/480/000000/apple.png" alt="fruit"
-                        class="relative z-10 w-72 drop-shadow-2xl">
-                </div>
-            </div>
+      <!-- header / nav -->
+      <nav class="flex flex-wrap items-center justify-between gap-4 mb-12">
+        <div class="flex items-center gap-2 text-2xl font-bold text-green-800">
+          <i class="fas fa-seedling text-green-600 text-3xl"></i>
+          <span>Verdant<span class="text-lime-600">Chain</span></span>
         </div>
-
-        <!-- features / cards -->
-        <div id="features" class="grid grid-cols-1 md:grid-cols-3 gap-6 my-20">
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <i class="fas fa-tractor text-4xl text-green-700 mb-3"></i>
-                <h3 class="text-xl font-semibold">Farm registration</h3>
-                <p class="text-gray-600 mt-2">Farmers register batches with harvest date, origin, and initial quality —
-                    permanently stored.</p>
-            </div>
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <i class="fas fa-truck text-4xl text-amber-600 mb-3"></i>
-                <h3 class="text-xl font-semibold">logistics updates</h3>
-                <p class="text-gray-600 mt-2">Transporters and warehouses append temperature, handling, and timestamps.
-                </p>
-            </div>
-            <div class="glass-card p-6 rounded-2xl text-center">
-                <i class="fas fa-qrcode text-4xl text-indigo-600 mb-3"></i>
-                <h3 class="text-xl font-semibold">consumer scan</h3>
-                <p class="text-gray-600 mt-2">Shoppers scan QR code to see entire journey — from farmer to shelf.</p>
-            </div>
+        <div class="flex gap-3">
+          <!-- LIVE DEMO button redirects to the specified external page -->
+          <a
+            href="https://shayandanish.github.io/Remix-food-traceability/frontend/index.html"
+            target="_blank"
+            class="px-5 py-2 bg-white/60 rounded-full text-green-800 hover:bg-green-100 transition flex items-center gap-1"
+          >
+            <i class="fas fa-play-circle"></i> live demo
+          </a>
+          <a
+            href="#about"
+            class="px-5 py-2 bg-green-700 text-white rounded-full hover:bg-green-800 transition flex items-center gap-1"
+            ><i class="fas fa-leaf"></i> about</a
+          >
         </div>
+      </nav>
 
-        <!-- about + CTA -->
-        <div id="about" class="glass-card p-8 rounded-3xl my-16 flex flex-col md:flex-row items-center gap-8">
-            <div class="flex-1">
-                <h2 class="text-3xl font-bold text-green-800 mb-4">Built for transparency</h2>
-                <p class="text-gray-700 leading-relaxed">
-                    VerdantChain uses smart contracts to immutably record each step of fresh produce logistics.
-                    No more opaque supply chains — consumers can verify ethical sourcing, and farmers get fair
-                    recognition.
-                </p>
-                <div class="flex flex-wrap gap-3 mt-6">
-                    <span class="bg-green-100 px-4 py-2 rounded-full text-sm flex items-center gap-1"><i
-                            class="fas fa-check-circle text-green-600"></i> Ethereum / Polygon</span>
-                    <span class="bg-green-100 px-4 py-2 rounded-full text-sm flex items-center gap-1"><i
-                            class="fas fa-check-circle text-green-600"></i> MetaMask</span>
-                    <span class="bg-green-100 px-4 py-2 rounded-full text-sm flex items-center gap-1"><i
-                            class="fas fa-check-circle text-green-600"></i> QR ready</span>
-                </div>
-            </div>
-            <div class="flex flex-col items-center gap-3">
-                <i class="fas fa-leaf text-6xl text-green-500/60"></i>
-                <a href="https://shayandanish.github.io/Remix-food-traceability/frontend/qrcode.html"
-                    class="btn-primary text-white px-8 py-3 rounded-full whitespace-nowrap font-medium shadow-md">
-                    <i class="fas fa-arrow-right"></i> launch QR app
-                </a>
-            </div>
+      <!-- hero -->
+      <div class="flex flex-col lg:flex-row items-center gap-12 mb-20">
+        <div class="flex-1 text-center lg:text-left">
+          <h1 class="text-4xl md:text-5xl font-extrabold leading-tight">
+            <span class="text-green-800">From orchard,</span><br />
+            <span
+              class="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-lime-500"
+              >to table on chain</span
+            >
+          </h1>
+          <p class="text-lg text-gray-700 mt-6 max-w-lg mx-auto lg:mx-0">
+            Every fruit tells a story. We help farmers, distributors, and
+            consumers trace freshness and fairness with verifiable blockchain
+            records.
+          </p>
+          <div
+            class="flex flex-wrap gap-4 mt-8 justify-center lg:justify-start"
+          >
+            <!-- QR demo button redirects to the separate QR page (saved as qr-viewer.html) -->
+            <a
+              href="https://shayandanish.github.io/Remix-food-traceability/frontend/qrcode.html"
+              class="btn-primary text-white px-8 py-3 rounded-full font-medium flex items-center gap-2 shadow-lg"
+            >
+              <i class="fas fa-qrcode"></i> QR scanner demo
+            </a>
+            <a
+              href="#features"
+              class="bg-white/80 text-green-800 px-8 py-3 rounded-full font-medium border border-green-200 hover:bg-white flex items-center gap-2"
+            >
+              <i class="fas fa-apple-alt"></i> how it works
+            </a>
+          </div>
+          <div
+            class="mt-8 flex items-center gap-4 text-sm text-gray-600 justify-center lg:justify-start"
+          >
+            <span
+              ><i class="fas fa-check-circle text-green-600"></i> farm
+              verified</span
+            >
+            <span
+              ><i class="fas fa-check-circle text-green-600"></i> transport
+              tracked</span
+            >
+            <span
+              ><i class="fas fa-check-circle text-green-600"></i> retailer
+              trusted</span
+            >
+          </div>
         </div>
+        <div class="flex-1 flex justify-center fruit-icon">
+          <div class="relative">
+            <div
+              class="w-72 h-72 bg-green-100 rounded-full opacity-30 absolute blur-3xl"
+            ></div>
+            <img
+              src="https://img.icons8.com/fluency/480/000000/apple.png"
+              alt="fruit"
+              class="relative z-10 w-72 drop-shadow-2xl"
+            />
+          </div>
+        </div>
+      </div>
 
-        <!-- footer -->
-        <footer class="text-center text-gray-600 text-sm border-t border-green-200 pt-8 mt-12">
-            <p>🍎 VerdantChain – farm-to-customer traceability. Decentralized & open.</p>
-            <p class="mt-2 text-green-600">© 2026 • built for Remix / Food traceability</p>
-        </footer>
+      <!-- features / cards -->
+      <div id="features" class="grid grid-cols-1 md:grid-cols-3 gap-6 my-20">
+        <div class="glass-card p-6 rounded-2xl text-center">
+          <i class="fas fa-tractor text-4xl text-green-700 mb-3"></i>
+          <h3 class="text-xl font-semibold">Farm registration</h3>
+          <p class="text-gray-600 mt-2">
+            Farmers register batches with harvest date, origin, and initial
+            quality permanently stored.
+          </p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl text-center">
+          <i class="fas fa-truck text-4xl text-amber-600 mb-3"></i>
+          <h3 class="text-xl font-semibold">logistics updates</h3>
+          <p class="text-gray-600 mt-2">
+            Transporters and warehouses append data about the batch like enter
+            vehicle name wearhouse name and timestamps.
+          </p>
+        </div>
+        <div class="glass-card p-6 rounded-2xl text-center">
+          <i class="fas fa-qrcode text-4xl text-indigo-600 mb-3"></i>
+          <h3 class="text-xl font-semibold">consumer scan</h3>
+          <p class="text-gray-600 mt-2">
+            Customer scan QR code to see entire journey from farmer to market.
+          </p>
+        </div>
+      </div>
+
+      <!-- about + CTA -->
+      <div
+        id="about"
+        class="glass-card p-8 rounded-3xl my-16 flex flex-col md:flex-row items-center gap-8"
+      >
+        <div class="flex-1">
+          <h2 class="text-3xl font-bold text-green-800 mb-4">
+            Built for transparency
+          </h2>
+          <p class="text-gray-700 leading-relaxed">
+            VerdantChain uses smart contracts to immutably record each step of
+            fresh produce logistics. . The system will track and ensure the
+            movement of fruit batches from the farm to the final consumers by
+            utilizing smart contracts and blockchain technology. In order to
+            empower stakeholders and increase consumer trust, every transaction
+            will be permanently documented in the blockchain and made available
+            via QR code scanning.
+          </p>
+          <div class="flex flex-wrap gap-3 mt-6">
+            <span
+              class="bg-green-100 px-4 py-2 rounded-full text-sm flex items-center gap-1"
+              ><i class="fas fa-check-circle text-green-600"></i> Ethereum /
+              Polygon</span
+            >
+            <span
+              class="bg-green-100 px-4 py-2 rounded-full text-sm flex items-center gap-1"
+              ><i class="fas fa-check-circle text-green-600"></i> MetaMask</span
+            >
+            <span
+              class="bg-green-100 px-4 py-2 rounded-full text-sm flex items-center gap-1"
+              ><i class="fas fa-check-circle text-green-600"></i> QR ready</span
+            >
+          </div>
+        </div>
+        <div class="flex flex-col items-center gap-3">
+          <i class="fas fa-leaf text-6xl text-green-500/60"></i>
+          <a
+            href="https://shayandanish.github.io/Remix-food-traceability/frontend/qrcode.html"
+            class="btn-primary text-white px-8 py-3 rounded-full whitespace-nowrap font-medium shadow-md"
+          >
+            <i class="fas fa-arrow-right"></i> launch QR app
+          </a>
+        </div>
+      </div>
+
+      <!-- footer -->
+      <footer
+        class="text-center text-gray-600 text-sm border-t border-green-200 pt-8 mt-12"
+      >
+        <p>
+          🍎 VerdantChain farm-to-customer traceability. Decentralized & open.
+        </p>
+        <p class="mt-2 text-green-600">
+          © 2026 • built for Remix / Food traceability
+        </p>
+      </footer>
     </div>
 
     <!-- Note: the QR code page is completely separate (saved as qr-viewer.html) -->
     <!-- This landing page only links to it. -->
-</body>
-
+  </body>
 </html>
