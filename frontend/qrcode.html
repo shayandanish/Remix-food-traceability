@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VerdantChain · QR Batch Viewer</title>
+  <meta name="description" content="Scan a VerdantChain QR code to view the full farm-to-table journey of any fruit batch on the blockchain — no wallet needed." />
+  <!-- Web3 (for MetaMask fallback) -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <!-- QRCode.js for generating QR codes -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="abi.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --green-950: #052e16;
+      --green-900: #14532d;
+      --green-800: #166534;
+      --green-700: #15803d;
+      --green-600: #16a34a;
+      --green-500: #22c55e;
+      --green-400: #4ade80;
+      --green-300: #86efac;
+      --green-100: #dcfce7;
+      --lime-400: #a3e635;
+      --amber-400: #fbbf24;
+      --indigo-400: #818cf8;
+      --surface: rgba(255,255,255,0.06);
+      --surface-hover: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #030c06 0%, #071a0e 40%, #0a2410 100%);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #e2f0e8;
+      min-height: 100vh;
+    }
+
+    /* ── animated bg orbs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(22,163,74,0.15) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: float1 12s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      animation: float2 15s ease-in-out infinite alternate;
+    }
+    @keyframes float1 { from { transform: translate(0,0); } to { transform: translate(80px, 60px); } }
+    @keyframes float2 { from { transform: translate(0,0); } to { transform: translate(-60px, -80px); } }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── glass panels ── */
+    .glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px;
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+    }
+
+    /* ── topbar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      color: #86efac;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.12); color: #bbf7d0; }
+
+    .brand-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: rgba(22,163,74,0.15);
+      border: 1px solid rgba(22,163,74,0.30);
+      border-radius: 999px;
+      font-weight: 600;
+      color: #86efac;
+      font-size: 0.9rem;
+    }
+
+    /* ── section header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .section-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .section-icon.indigo { background: rgba(129,140,248,0.15); color: #818cf8; }
+    .section-icon.green  { background: rgba(22,163,74,0.15);   color: #4ade80; }
+
+    /* ── input & button ── */
+    .qr-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      color: #e2f0e8;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .qr-input::placeholder { color: rgba(255,255,255,0.3); }
+    .qr-input:focus {
+      border-color: rgba(74,222,128,0.5);
+      box-shadow: 0 0 0 3px rgba(74,222,128,0.12);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #15803d, #166534);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(21,128,61,0.5);
+    }
+
+    /* ── QR box ── */
+    #qrcode {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      min-width: 160px; min-height: 160px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .qr-placeholder {
+      color: #aaa;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .link-box {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 0.82rem;
+      word-break: break-all;
+      color: #818cf8;
+    }
+
+    /* ── status badges ── */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-green  { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+    .badge-amber  { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+    .badge-purple { background: rgba(167,139,250,0.15);color: #c4b5fd; border: 1px solid rgba(167,139,250,0.25); }
+    .badge-gray   { background: rgba(255,255,255,0.06);color: #94a3b8; border: 1px solid rgba(255,255,255,0.10); }
+
+    /* ── journey timeline cards ── */
+    .journey-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .journey-step {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .journey-step:hover { border-color: rgba(74,222,128,0.3); transform: translateY(-2px); }
+    .journey-step.active { border-color: rgba(74,222,128,0.35); background: rgba(74,222,128,0.05); }
+    .journey-step.inactive { opacity: 0.45; }
+    .step-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+    .step-icon.farm      { background: rgba(22,163,74,0.2);  color: #4ade80; }
+    .step-icon.truck     { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .step-icon.warehouse { background: rgba(167,139,250,0.2);color: #c4b5fd; }
+    .step-icon.retail    { background: rgba(236,72,153,0.2); color: #f9a8d4; }
+    .step-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+    .step-value { font-size: 0.9rem; font-weight: 600; color: #e2f0e8; }
+    .step-sub   { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    /* ── batch card ── */
+    .batch-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    .batch-card:hover { border-color: rgba(74,222,128,0.25); }
+    .batch-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .batch-id { font-size: 0.78rem; color: rgba(255,255,255,0.35); font-family: 'Courier New', monospace; }
+    .batch-product { font-size: 1.1rem; font-weight: 700; color: #e2f0e8; }
+
+    /* ── loading / empty ── */
+    .center-msg {
+      text-align: center;
+      padding: 40px 16px;
+      color: rgba(255,255,255,0.35);
+    }
+    .center-msg i { font-size: 2.5rem; display: block; margin-bottom: 12px; color: rgba(74,222,128,0.3); }
+
+    /* ── hint strip ── */
+    .hint-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.3);
+      margin-top: 16px;
+    }
+
+    /* ── connection status bar ── */
+    #connectionStatus {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+    }
+    #connectionStatus.rpc    { background: rgba(74,222,128,0.08);  border: 1px solid rgba(74,222,128,0.2);  color: #86efac; display: flex; }
+    #connectionStatus.wallet { background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.2); color: #c4b5fd; display: flex; }
+    #connectionStatus.error  { background: rgba(239,68,68,0.08);   border: 1px solid rgba(239,68,68,0.2);   color: #fca5a5; display: flex; }
+
+    /* ── no-wallet info box ── */
+    .rpc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: #86efac;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .topbar { flex-direction: column; gap: 10px; align-items: flex-start; }
+      .journey-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-wrap">
+
+    <!-- ── topbar ── -->
+    <div class="topbar" id="topBar">
+      <a href="index.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> back to app
+      </a>
+      <div class="brand-pill">
+        <i class="fas fa-seedling"></i>
+        <span id="headerLabel">QR batch viewer</span>
+      </div>
+    </div>
+
+    <!-- ── connection status ── -->
+    <div id="connectionStatus"></div>
+
+    <!-- ── main glass card ── -->
+    <div class="glass-strong" style="padding: 24px 28px;">
+
+      <!-- ====== QR GENERATOR SECTION (hidden in scan mode) ====== -->
+      <div id="qrGeneratorSection">
+        <div class="section-header">
+          <div class="section-icon indigo"><i class="fas fa-qrcode"></i></div>
+          <div>
+            <h2 style="font-size:1.25rem; font-weight:700; color:#e2f0e8;">Generate Farmer QR</h2>
+            <p style="font-size:0.82rem; color:rgba(255,255,255,0.4); margin-top:2px;">Create a shareable QR code for any registered farmer</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <input id="farmerInput" type="text" placeholder="e.g. John Farmer" class="qr-input" />
+          <button onclick="generateQRCode()" class="btn-primary">
+            <i class="fas fa-qrcode"></i> Generate QR
+          </button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:16px; margin-top:24px;" id="qrDisplayArea">
+          <div id="qrcode">
+            <div class="qr-placeholder">✨ QR code<br>will appear here</div>
+          </div>
+          <div class="link-box">
+            <i class="fas fa-link" style="color:#818cf8; margin-right:6px;"></i>
+            <span id="generatedLink"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== BATCH DETAILS SECTION ====== -->
+      <div id="batchSection" style="margin-top: 24px;">
+        <div class="section-header">
+          <div class="section-icon green"><i class="fas fa-clipboard-list"></i></div>
+          <div style="flex:1;">
+            <h3 style="font-size:1.1rem; font-weight:700; color:#e2f0e8;">Batch details</h3>
+            <p id="batchSubtitle" style="font-size:0.78rem; color:rgba(255,255,255,0.4); margin-top:2px;">Results will appear here</p>
+          </div>
+          <span id="batchCount" style="background:rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.25); color:#86efac; font-size:0.75rem; font-weight:600; padding:4px 12px; border-radius:999px;"></span>
+        </div>
+
+        <div id="result">
+          <div class="center-msg" id="defaultMessage">
+            <i class="fas fa-qrcode"></i>
+            <p>Enter a farmer name above to generate a QR code &amp; view batch details</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- hint -->
+      <div class="hint-strip">
+        <i class="fas fa-info-circle"></i>
+        <span id="scanHint">Generate a QR code or scan one to view batch details • No wallet required for viewing</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    // Public read‑only RPC endpoints (used when MetaMask is absent).
+    // The contract is on Ethereum mainnet; adjust chainId/RPC if using testnet.
+    const PUBLIC_RPC_URLS = [
+      'https://ethereum-sepolia-rpc.publicnode.com',   // Sepolia (testnet fallback)
+      'https://rpc.ankr.com/eth_sepolia',
+      'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // public key
+    ];
+
+    // ============================================================
+    // GLOBALS
+    // ============================================================
+    let web3 = null;
+    let contract = null;
+    let usingPublicRPC = false;
+    let isScanMode = false;
+
+    // ============================================================
+    // INIT — try MetaMask first, fall back to public RPC
+    // ============================================================
+    async function initWeb3() {
+      const statusEl = document.getElementById('connectionStatus');
+
+      // 1. Try MetaMask / injected provider
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          web3 = new Web3(window.ethereum);
+          // Silently check existing accounts (no popup)
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (typeof contractAddress !== 'undefined' && typeof abi !== 'undefined') {
+            contract = new web3.eth.Contract(abi, contractAddress);
+          }
+          usingPublicRPC = false;
+          if (accounts.length > 0) {
+            showConnectionStatus('wallet', `<i class="fas fa-wallet"></i> MetaMask connected: ${accounts[0].slice(0,6)}…${accounts[0].slice(-4)}`);
+          } else {
+            // MetaMask present but no account — still use it for reads without popup
+            showConnectionStatus('rpc', '<i class="fas fa-shield-alt"></i> Reading via browser provider (no wallet required)');
+          }
+          return;
+        } catch (e) {
+          console.warn('MetaMask init failed, falling back to public RPC:', e);
+        }
+      }
+
+      // 2. Fall back to public RPC (read-only, no wallet needed)
+      for (const rpcUrl of PUBLIC_RPC_URLS) {
+        try {
+          const testWeb3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+          // Quick sanity-check: get block number
+          await testWeb3.eth.getBlockNumber();
+          web3 = testWeb3;
+          if (typeof contractAddress !== 'undefined' && typeof abi !== 'undefined') {
+            contract = new web3.eth.Contract(abi, contractAddress);
+          }
+          usingPublicRPC = true;
+          showConnectionStatus('rpc', `<i class="fas fa-satellite-dish"></i> Reading on-chain data via public RPC — no wallet needed`);
+          return;
+        } catch (e) {
+          console.warn('RPC failed:', rpcUrl, e.message);
+        }
+      }
+
+      // 3. All failed
+      showConnectionStatus('error', '<i class="fas fa-exclamation-triangle"></i> Could not connect to any RPC endpoint. Please install MetaMask.');
+    }
+
+    function showConnectionStatus(type, html) {
+      const el = document.getElementById('connectionStatus');
+      el.className = type;
+      el.innerHTML = html;
+    }
+
+    // ============================================================
+    // FORMAT HELPERS
+    // ============================================================
+    // ─── format date + time in PKT (UTC+5 / Asia/Karachi) ───
+    function formatDisplayDate(timestamp) {
+      if (!timestamp || timestamp === '0' || timestamp === 0) return '—';
+      const ts = typeof timestamp === 'bigint' ? Number(timestamp) : Number(timestamp);
+      if (isNaN(ts) || ts === 0) return '—';
+      const d = new Date(ts * 1000);
+      if (isNaN(d.getTime())) return '—';
+      const opts = {
+        timeZone: 'Asia/Karachi',
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        hour12: false
+      };
+      return d.toLocaleString('en-GB', opts).replace(',', '') + ' PKT';
+    }
+
+    function safeStr(val) {
+      if (!val) return '';
+      if (typeof val === 'object') return '';
+      return String(val).trim();
+    }
+
+    function statusBadgeHtml(status) {
+      if (!status || status === '—') return '<span class="status-badge badge-gray">Unknown</span>';
+      const s = status.toLowerCase();
+      if (s.includes('retail') || s.includes('sold')) return `<span class="status-badge badge-green"><i class="fas fa-check-circle"></i>${status}</span>`;
+      if (s.includes('warehouse') || s.includes('stored')) return `<span class="status-badge badge-purple"><i class="fas fa-warehouse"></i>${status}</span>`;
+      if (s.includes('transport') || s.includes('transit')) return `<span class="status-badge badge-amber"><i class="fas fa-truck"></i>${status}</span>`;
+      if (s.includes('farm') || s.includes('harvest')) return `<span class="status-badge badge-green"><i class="fas fa-seedling"></i>${status}</span>`;
+      return `<span class="status-badge badge-gray">${status}</span>`;
+    }
+
+    // ============================================================
+    // FETCH BATCH DETAILS
+    // ============================================================
+    async function fetchBatchDetails(farmerName) {
+      const resultDiv = document.getElementById('result');
+      const batchCountSpan = document.getElementById('batchCount');
+      const batchSubtitle = document.getElementById('batchSubtitle');
+      const defaultMsg = document.getElementById('defaultMessage');
+
+      if (defaultMsg) defaultMsg.style.display = 'none';
+      resultDiv.innerHTML = `
+        <div class="center-msg">
+          <i class="fas fa-spinner fa-spin" style="color:rgba(74,222,128,0.5);"></i>
+          <p>Loading on-chain data for <strong>${farmerName}</strong>…</p>
+          <p style="font-size:0.78rem; margin-top:6px; color:rgba(255,255,255,0.25);">${usingPublicRPC ? 'Reading via public RPC — no wallet required' : 'Fetching from blockchain…'}</p>
+        </div>`;
+      batchCountSpan.textContent = '';
+
+      if (!farmerName) {
+        resultDiv.innerHTML = '<div class="center-msg"><i class="fas fa-exclamation-circle" style="color:#fca5a5;"></i><p>No farmer name provided.</p></div>';
+        return;
+      }
+
+      // Ensure web3/contract exists
+      if (!web3 || !contract) {
+        await initWeb3();
+      }
+      if (!contract) {
+        resultDiv.innerHTML = '<div class="center-msg"><i class="fas fa-times-circle" style="color:#fca5a5;"></i><p>Contract not initialised. Check abi.js and network.</p></div>';
+        return;
+      }
+
+      try {
+        const batchIds = await contract.methods.getBatchesByFarmer(farmerName).call();
+
+        if (!batchIds || batchIds.length === 0) {
+          resultDiv.innerHTML = `<div class="center-msg"><i class="fas fa-box-open"></i><p>No batches found for <strong>${farmerName}</strong>.</p></div>`;
+          batchCountSpan.textContent = '0 batches';
+          batchSubtitle.textContent = `Farmer: ${farmerName}`;
+          return;
+        }
+
+        batchCountSpan.textContent = `${batchIds.length} batch${batchIds.length > 1 ? 'es' : ''}`;
+        batchSubtitle.textContent = `Farmer: ${farmerName}`;
+
+        let allHtml = '';
+
+        for (const batchId of batchIds) {
+          const b = await contract.methods.batches(batchId).call();
+
+          const farmerData    = b.farmer    || {};
+          const transportData = b.transport || {};
+          const warehouseData = b.warehouse || {};
+          const retailerData  = b.retailer  || {};
+
+          const productName   = safeStr(farmerData.productName)   || safeStr(b.productName)    || '—';
+          const originFarm    = safeStr(farmerData.originFarm)     || safeStr(b.originFarm)     || '—';
+          const farmerNameVal = safeStr(farmerData.farmerName)     || safeStr(b.farmerName)     || '—';
+          const harvestDate   = formatDisplayDate(farmerData.harvestDate  || b.harvestDate);
+          const transporter   = safeStr(transportData.transporterName)   || safeStr(b.transporterName) || '';
+          const transDetails  = safeStr(transportData.transportDetails)   || '';
+          const transDate     = formatDisplayDate(transportData.transportDate  || b.transportDate);
+          const warehouse     = safeStr(warehouseData.warehouseName)     || safeStr(b.warehouseName) || '';
+          const wareDetails   = safeStr(warehouseData.warehouseDetails)   || '';
+          const wareDate      = formatDisplayDate(warehouseData.warehouseDate  || b.warehouseDate);
+          const retailer      = safeStr(retailerData.retailerName)       || safeStr(b.retailerName)   || '';
+          const retailStore   = safeStr(retailerData.retailStore)        || safeStr(b.retailStore)    || '';
+          const retailDate    = formatDisplayDate(retailerData.retailDate || b.retailDate);
+          const quality       = safeStr(b.quality) || '—';
+          const status        = safeStr(b.status)  || 'Registered';
+          const owner         = safeStr(b.currentOwner) || '—';
+          const lastUpdated   = formatDisplayDate(b.lastUpdated);
+
+          const farmActive      = true;
+          const transportActive = !!transporter;
+          const warehouseActive = !!warehouse;
+          const retailActive    = !!retailer;
+
+          allHtml += `
+          <div class="batch-card">
+            <div class="batch-meta">
+              <div>
+                <div class="batch-id">Batch ID: ${safeStr(b.batchId) || batchId}</div>
+                <div class="batch-product">🍎 ${productName}</div>
+              </div>
+              <div style="margin-left:auto; display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+                ${statusBadgeHtml(status)}
+                <span style="font-size:0.72rem; color:rgba(255,255,255,0.3);">Quality: ${quality}</span>
+              </div>
+            </div>
+
+            <!-- Journey timeline -->
+            <div class="journey-grid">
+
+              <!-- Farm -->
+              <div class="journey-step ${farmActive ? 'active' : 'inactive'}">
+                <div class="step-icon farm"><i class="fas fa-tractor"></i></div>
+                <div class="step-label">🌱 Farm Origin</div>
+                <div class="step-value">${originFarm}</div>
+                <div class="step-sub">${farmerNameVal}</div>
+                <div class="step-sub" style="margin-top:6px;"><i class="fas fa-calendar-alt" style="margin-right:4px; opacity:0.5;"></i>${harvestDate}</div>
+              </div>
+
+              <!-- Transport -->
+              <div class="journey-step ${transportActive ? 'active' : 'inactive'}">
+                <div class="step-icon truck"><i class="fas fa-truck"></i></div>
+                <div class="step-label">🚚 Transport</div>
+                <div class="step-value">${transporter || 'Not recorded'}</div>
+                <div class="step-sub">${transDetails}</div>
+                <div class="step-sub" style="margin-top:6px;"><i class="fas fa-calendar-alt" style="margin-right:4px; opacity:0.5;"></i>${transDate || '—'}</div>
+              </div>
+
+              <!-- Warehouse -->
+              <div class="journey-step ${warehouseActive ? 'active' : 'inactive'}">
+                <div class="step-icon warehouse"><i class="fas fa-warehouse"></i></div>
+                <div class="step-label">📦 Warehouse</div>
+                <div class="step-value">${warehouse || 'Not recorded'}</div>
+                <div class="step-sub">${wareDetails}</div>
+                <div class="step-sub" style="margin-top:6px;"><i class="fas fa-calendar-alt" style="margin-right:4px; opacity:0.5;"></i>${wareDate || '—'}</div>
+              </div>
+
+              <!-- Retail -->
+              <div class="journey-step ${retailActive ? 'active' : 'inactive'}">
+                <div class="step-icon retail"><i class="fas fa-store"></i></div>
+                <div class="step-label">🏪 Retail</div>
+                <div class="step-value">${retailer || 'Not yet at retail'}</div>
+                <div class="step-sub">${retailStore}</div>
+                <div class="step-sub" style="margin-top:6px;"><i class="fas fa-calendar-alt" style="margin-right:4px; opacity:0.5;"></i>${retailDate || '—'}</div>
+              </div>
+
+            </div>
+
+            <!-- Footer row -->
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); font-size:0.75rem; color:rgba(255,255,255,0.3);">
+              <span><i class="fas fa-user-circle" style="margin-right:4px;"></i>Owner: ${owner}</span>
+              ${lastUpdated !== '—' ? `<span style="margin-left:auto;"><i class="fas fa-clock" style="margin-right:4px;"></i>Last updated: ${lastUpdated}</span>` : ''}
+            </div>
+          </div>`;
+        }
+
+        resultDiv.innerHTML = allHtml;
+
+        document.getElementById('scanHint').innerHTML =
+          `<i class="fas fa-check-circle" style="color:#4ade80;"></i> Loaded ${batchIds.length} batch${batchIds.length > 1 ? 'es' : ''} for <strong style="color:#86efac;">${farmerName}</strong> · ${usingPublicRPC ? '<span style="color:#86efac;">No wallet required</span>' : 'via MetaMask'}`;
+
+      } catch (err) {
+        console.error('Fetch error:', err);
+        resultDiv.innerHTML = `
+          <div class="center-msg">
+            <i class="fas fa-exclamation-triangle" style="color:#fca5a5;"></i>
+            <p style="color:#fca5a5;">Error loading data</p>
+            <p style="font-size:0.78rem; margin-top:6px;">${err.message}</p>
+          </div>`;
+      }
+    }
+
+    // ============================================================
+    // GENERATE QR CODE
+    // ============================================================
+    function generateQRCode() {
+      const farmer = document.getElementById('farmerInput').value.trim();
+      if (!farmer) {
+        alert('🌱 Please enter a farmer name.');
+        return;
+      }
+
+      const baseUrl = window.location.href.split('?')[0];
+      const url = `${baseUrl}?farmer=${encodeURIComponent(farmer)}`;
+
+      const qrDiv = document.getElementById('qrcode');
+      qrDiv.innerHTML = '';
+
+      new QRCode(qrDiv, {
+        text: url,
+        width: 160,
+        height: 160,
+        colorDark: '#14532d',
+        colorLight: '#ffffff',
+      });
+
+      document.getElementById('generatedLink').innerHTML =
+        `<a href="${url}" target="_blank" style="color:#818cf8; text-decoration:underline; word-break:break-all;">${url}</a>`;
+
+      document.getElementById('scanHint').innerHTML =
+        '<i class="fas fa-camera" style="color:#4ade80;"></i> Scan this QR code with any phone — no wallet required';
+
+      // Also show batch details immediately
+      fetchBatchDetails(farmer);
+    }
+
+    // ============================================================
+    // ENTRY POINT
+    // ============================================================
+    window.addEventListener('load', async () => {
+      // Always init web3 on load
+      await initWeb3();
+
+      const params = new URLSearchParams(window.location.search);
+      const farmerName = params.get('farmer');
+
+      if (farmerName) {
+        // ── QR SCAN MODE ──
+        isScanMode = true;
+
+        // Hide generator section
+        const gen = document.getElementById('qrGeneratorSection');
+        if (gen) gen.style.display = 'none';
+
+        // Update header
+        document.getElementById('headerLabel').textContent = '🌿 Batch View';
+
+        // Show no-wallet badge in topbar
+        const topBar = document.getElementById('topBar');
+        const badge = document.createElement('div');
+        badge.className = 'rpc-badge';
+        badge.innerHTML = '<i class="fas fa-eye"></i> View Only — No Wallet Needed';
+        topBar.insertBefore(badge, topBar.querySelector('.brand-pill'));
+
+        document.getElementById('scanHint').innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> QR detected — loading on-chain data…';
+
+        setTimeout(() => fetchBatchDetails(farmerName), 400);
+
+      } else {
+        // ── NORMAL MODE ──
+        document.getElementById('scanHint').textContent =
+          '👆 Enter a farmer name to generate a QR code — scanning requires no wallet';
+      }
+    });
+
+    // Listen for MetaMask account changes
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', accounts => {
+        if (accounts.length > 0) {
+          showConnectionStatus('wallet', `<i class="fas fa-wallet"></i> Wallet: ${accounts[0].slice(0,6)}…${accounts[0].slice(-4)}`);
+          const params = new URLSearchParams(window.location.search);
+          const fn = params.get('farmer');
+          if (fn) fetchBatchDetails(fn);
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

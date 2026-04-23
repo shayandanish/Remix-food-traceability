@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VerdantChain · Farm Trust</title>
+  <meta name="description" content="VerdantChain — blockchain-powered food traceability. Every fruit tells a story, secured on-chain from orchard to table." />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --green-400: #4ade80;
+      --green-500: #22c55e;
+      --green-600: #16a34a;
+      --green-700: #15803d;
+      --green-900: #14532d;
+      --lime-400:  #a3e635;
+      --amber-400: #fbbf24;
+      --indigo-400:#818cf8;
+      --purple-400:#c4b5fd;
+      --pink-400:  #f9a8d4;
+      --surface:   rgba(255,255,255,0.05);
+      --border:    rgba(255,255,255,0.09);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(140deg, #030c06 0%, #071a0e 50%, #0a2410 100%);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #e2f0e8;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── ambient orbs ── */
+    .orb { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; }
+    .orb-1 { width:700px; height:700px; background: radial-gradient(circle, rgba(22,163,74,0.14) 0%, transparent 70%); top:-250px; left:-200px; animation: flt1 14s ease-in-out infinite alternate; }
+    .orb-2 { width:500px; height:500px; background: radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%); bottom:-150px; right:-100px; animation: flt2 18s ease-in-out infinite alternate; }
+    .orb-3 { width:350px; height:350px; background: radial-gradient(circle, rgba(163,230,53,0.06) 0%, transparent 70%); top:50%; left:50%; animation: flt3 22s ease-in-out infinite alternate; }
+    @keyframes flt1 { to { transform: translate(80px,60px); } }
+    @keyframes flt2 { to { transform: translate(-60px,-80px); } }
+    @keyframes flt3 { to { transform: translate(-50px,70px); } }
+
+    .page { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 20px 80px; }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 72px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.45rem; font-weight: 800;
+      text-decoration: none; color: #e2f0e8;
+    }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, #15803d, #14532d);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: #4ade80;
+    }
+    .logo .accent { color: #4ade80; }
+    .nav-btns { display: flex; gap: 10px; }
+    .nav-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 500;
+      text-decoration: none; transition: all 0.15s;
+    }
+    .nav-ghost { background:var(--surface); border:1px solid var(--border); color:rgba(255,255,255,0.55); }
+    .nav-ghost:hover { background: rgba(255,255,255,0.09); color:#e2f0e8; }
+    .nav-solid { background: linear-gradient(135deg,#15803d,#14532d); color:#fff; border:1px solid rgba(255,255,255,0.07); }
+    .nav-solid:hover { background: linear-gradient(135deg,#16a34a,#15803d); box-shadow:0 8px 20px -8px rgba(22,163,74,0.5); transform:translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      margin-bottom: 96px;
+    }
+    .hero-left { flex: 1; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 999px; padding: 6px 14px;
+      font-size: 0.78rem; font-weight: 600; color: #86efac;
+      margin-bottom: 24px;
+    }
+    .hero-tag .dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    h1 {
+      font-size: clamp(2.6rem, 5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 22px;
+    }
+    .hero-gradient { background: linear-gradient(135deg, #4ade80 0%, #a3e635 60%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.75;
+      max-width: 500px;
+      margin-bottom: 36px;
+    }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 36px; }
+    .cta-primary {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #15803d, #14532d);
+      color: #fff; border-radius: 14px;
+      font-size: 0.95rem; font-weight: 700;
+      text-decoration: none; transition: all 0.15s;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .cta-primary:hover { background: linear-gradient(135deg,#16a34a,#15803d); transform:translateY(-2px); box-shadow:0 16px 32px -12px rgba(22,163,74,0.6); }
+    .cta-secondary {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 14px 28px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: rgba(255,255,255,0.7); border-radius: 14px;
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; transition: all 0.15s;
+    }
+    .cta-secondary:hover { background: rgba(255,255,255,0.09); color: #e2f0e8; border-color: rgba(255,255,255,0.15); }
+
+    .trust-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .trust-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px; padding: 6px 14px;
+      font-size: 0.78rem; color: rgba(255,255,255,0.5);
+    }
+    .trust-pill i { color: #4ade80; }
+
+    /* hero visual */
+    .hero-right { flex-shrink: 0; display: flex; justify-content: center; }
+    .hero-visual {
+      position: relative;
+      width: 320px; height: 320px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-glow {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(74,222,128,0.12) 0%, transparent 70%);
+      animation: pulse-scale 4s ease-in-out infinite;
+    }
+    @keyframes pulse-scale { 0%,100%{transform:scale(0.95);} 50%{transform:scale(1.08);} }
+    .hero-fruit {
+      width: 240px;
+      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+      animation: float-fruit 6s ease-in-out infinite;
+    }
+    @keyframes float-fruit { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-16px);} }
+    /* floating badges */
+    .float-badge {
+      position: absolute;
+      background: rgba(10,25,15,0.85);
+      border: 1px solid rgba(74,222,128,0.25);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 0.75rem; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+      animation: badge-float 5s ease-in-out infinite;
+    }
+    .float-badge:nth-child(3) { top: 30px; right: -10px; animation-delay: 0s; }
+    .float-badge:nth-child(4) { bottom: 50px; left: -20px; animation-delay: 1.5s; }
+    .float-badge:nth-child(5) { bottom: 10px; right: 10px; animation-delay: 3s; }
+    @keyframes badge-float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 80px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 24px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: rgba(74,222,128,0.3); }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #4ade80; line-height: 1; }
+    .stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 6px; }
+
+    /* ── FEATURES ── */
+    #features { margin-bottom: 80px; }
+    .features-label {
+      text-align: center;
+      font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #4ade80; margin-bottom: 14px;
+    }
+    h2 {
+      text-align: center;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .features-desc { text-align:center; color:rgba(255,255,255,0.45); margin-bottom:48px; font-size:1rem; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.2s;
+    }
+    .feature-card:hover { border-color: rgba(74,222,128,0.3); transform:translateY(-3px); box-shadow:0 24px 48px -20px rgba(22,163,74,0.2); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 14px;
+    }
+    .fi-green  { background:rgba(74,222,128,0.1);  color:#4ade80; }
+    .fi-amber  { background:rgba(251,191,36,0.1);  color:#fbbf24; }
+    .fi-indigo { background:rgba(129,140,248,0.1); color:#818cf8; }
+    .feature-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-text  { font-size: 0.85rem; color:rgba(255,255,255,0.45); line-height:1.65; }
+
+    /* ── ABOUT SECTION ── */
+    #about {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px;
+      display: flex;
+      gap: 48px;
+      align-items: center;
+      margin-bottom: 80px;
+    }
+    .about-left { flex: 1; }
+    .about-left h2 { text-align:left; font-size:2rem; }
+    .about-desc { font-size:0.95rem; color:rgba(255,255,255,0.5); line-height:1.8; margin: 16px 0 24px; }
+    .tech-pills { display:flex; flex-wrap:wrap; gap:10px; }
+    .tech-pill {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(74,222,128,0.07); border:1px solid rgba(74,222,128,0.2);
+      border-radius:999px; padding:7px 16px;
+      font-size:0.8rem; color:#86efac;
+    }
+    .about-right { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .launch-btn {
+      display:inline-flex; align-items:center; gap:9px;
+      padding:15px 30px;
+      background:linear-gradient(135deg,#15803d,#14532d);
+      color:#fff; border-radius:14px;
+      font-size:0.95rem; font-weight:700;
+      text-decoration:none; transition:all 0.15s;
+      border:1px solid rgba(255,255,255,0.07);
+      white-space:nowrap;
+    }
+    .launch-btn:hover { background:linear-gradient(135deg,#16a34a,#15803d); transform:translateY(-2px); box-shadow:0 16px 32px -12px rgba(22,163,74,0.6); }
+    .qr-launch-btn {
+      display:inline-flex; align-items:center; gap:9px;
+      padding:13px 26px;
+      background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10);
+      color:rgba(255,255,255,0.65); border-radius:14px;
+      font-size:0.88rem; font-weight:500;
+      text-decoration:none; transition:all 0.15s;
+    }
+    .qr-launch-btn:hover { background: rgba(255,255,255,0.09); color:#e2f0e8; }
+
+    /* ── FOOTER ── */
+    footer {
+      display:flex; flex-direction:column; align-items:center;
+      gap:10px; text-align:center;
+      padding-top:32px; border-top:1px solid var(--border);
+      font-size:0.82rem; color:rgba(255,255,255,0.25);
+    }
+    footer a { color:#4ade80; text-decoration:none; }
+    footer a:hover { text-decoration:underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero { flex-direction: column; text-align: center; gap: 40px; }
+      .hero-desc { margin-left: auto; margin-right: auto; }
+      .hero-ctas, .trust-pills { justify-content: center; }
+      .hero-right { display: none; }
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      #about { flex-direction: column; padding: 32px; }
+      .about-left h2 { text-align: center; }
+    }
+    @media (max-width: 560px) {
+      .stats-strip { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="page">
+
+  <!-- ── NAV ── -->
+  <nav>
+    <a href="#" class="logo">
+      <div class="logo-icon"><i class="fas fa-seedling"></i></div>
+      <span>Verdant<span class="accent">Chain</span></span>
+    </a>
+    <div class="nav-btns">
+      <a href="frontend/qrcode.html" class="nav-btn nav-ghost">
+        <i class="fas fa-qrcode"></i> QR Scanner
+      </a>
+      <a href="frontend/index.html" class="nav-btn nav-solid">
+        <i class="fas fa-play-circle"></i> Launch App
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        Farm-to-table · Blockchain verified
+      </div>
+      <h1>
+        From orchard,<br>
+        <span class="hero-gradient">to table on&#8209;chain.</span>
+      </h1>
+      <p class="hero-desc">
+        Every fruit tells a story. VerdantChain helps farmers, distributors,
+        and consumers trace freshness and fairness with verifiable,
+        immutable blockchain records.
+      </p>
+      <div class="hero-ctas">
+        <a href="frontend/index.html" class="cta-primary">
+          <i class="fas fa-play-circle"></i> Launch App
+        </a>
+        <a href="frontend/qrcode.html" class="cta-secondary">
+          <i class="fas fa-qrcode"></i> QR Scanner
+        </a>
+      </div>
+      <div class="trust-pills">
+        <span class="trust-pill"><i class="fas fa-check-circle"></i> Farm verified</span>
+        <span class="trust-pill"><i class="fas fa-check-circle"></i> Transport tracked</span>
+        <span class="trust-pill"><i class="fas fa-check-circle"></i> Retailer trusted</span>
+        <span class="trust-pill"><i class="fas fa-eye"></i> No wallet to scan</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-visual">
+        <div class="hero-glow"></div>
+        <img src="https://img.icons8.com/fluency/480/000000/apple.png" alt="Fresh produce" class="hero-fruit" />
+        <div class="float-badge"><i class="fas fa-shield-alt" style="color:#4ade80;"></i> On-chain verified</div>
+        <div class="float-badge"><i class="fas fa-qrcode" style="color:#818cf8;"></i> QR ready</div>
+        <div class="float-badge"><i class="fas fa-truck" style="color:#fbbf24;"></i> Transit tracked</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS ── -->
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Immutable records on-chain</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Wallets needed to scan QR</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Supply chain checkpoints</div>
+    </div>
+  </div>
+
+  <!-- ── FEATURES ── -->
+  <section id="features">
+    <p class="features-label">How it works</p>
+    <h2>Every step, permanently recorded</h2>
+    <p class="features-desc">Four checkpoints from harvest to consumer — each one tamper-proof on Ethereum.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon fi-green"><i class="fas fa-tractor"></i></div>
+        <div class="feature-title">🌱 Farm Registration</div>
+        <div class="feature-text">Farmers register batches with harvest date, origin, and initial quality — permanently stored. Each batch gets a unique on-chain ID.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-amber"><i class="fas fa-truck"></i></div>
+        <div class="feature-title">🚚 Logistics Updates</div>
+        <div class="feature-text">Transporters and warehouses append data about each batch — vehicle name, warehouse facility, temperatures and timestamps.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-indigo"><i class="fas fa-qrcode"></i></div>
+        <div class="feature-title">📱 Consumer Scan</div>
+        <div class="feature-text">Customers scan a QR code to see the entire on-chain journey from farmer to market. <strong style="color:#86efac;">No wallet or app required</strong> — just scan and read.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ABOUT ── -->
+  <section id="about">
+    <div class="about-left">
+      <h2>Built for transparency</h2>
+      <p class="about-desc">
+        VerdantChain uses Ethereum smart contracts to immutably record each step
+        of fresh produce logistics. The system tracks and ensures the movement of
+        fruit batches from the farm to the final consumer by utilizing smart
+        contracts and blockchain technology. Every transaction is permanently
+        documented and accessible via QR code scanning — <em>no MetaMask needed to view</em>.
+      </p>
+      <div class="tech-pills">
+        <span class="tech-pill"><i class="fas fa-cube"></i> Ethereum / Solidity</span>
+        <span class="tech-pill"><i class="fas fa-wallet"></i> MetaMask write</span>
+        <span class="tech-pill"><i class="fas fa-eye"></i> Public RPC read</span>
+        <span class="tech-pill"><i class="fas fa-qrcode"></i> QR ready</span>
+      </div>
+    </div>
+    <div class="about-right">
+      <i class="fas fa-leaf" style="font-size:3.5rem; color:rgba(74,222,128,0.15);"></i>
+      <a href="frontend/index.html" class="launch-btn">
+        <i class="fas fa-arrow-right"></i> Launch App
+      </a>
+      <a href="frontend/qrcode.html" class="qr-launch-btn">
+        <i class="fas fa-qrcode"></i> Open QR Viewer
+      </a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div style="display:flex; align-items:center; gap:8px; color:rgba(74,222,128,0.5);">
+      <i class="fas fa-seedling"></i>
+      <span style="color:rgba(255,255,255,0.3);">VerdantChain · farm-to-customer traceability · decentralized &amp; open</span>
+      <i class="fas fa-seedling"></i>
+    </div>
+    <p>© 2026 · Built for Remix / Food Traceability</p>
+  </footer>
+
+</div>
+</body>
+</html>

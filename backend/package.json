@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js --network hardhat"
+  },
+  "dependencies": {
+    "ethers": "^5.0.0"
+  },
+  "devDependencies": {
+    "hardhat": "^2.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "dotenv": "^10.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Backend for deploying and interacting with Solidity contracts"
+}
